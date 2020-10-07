@@ -2,6 +2,7 @@ import pygame
 import sys
 
 #Sector by Txar
+#big thanks to Xelo and ThePythonGuy3 as they helped me with some of the code <3
 
 width = 800
 height = 576
@@ -10,6 +11,7 @@ playerSprite = pygame.image.load("pushblock.png")
 pushblockSprite = pygame.image.load("pushblock.png")
 floorSprite = pygame.image.load("floortile.png")
 blockSprite = pygame.image.load("block.png")
+holeSprite = pygame.image.load("hole.png")
 
 x = 400 #player x
 y = 300 #player y
@@ -17,10 +19,12 @@ upG = False #up go (for player)
 leftG = False #left go (for player)
 downG = False #down go (for player)
 rightG = False #right go (for player)
-pbX = [64, 640, 96] #pushblocks x
-pbY = [64, 128, 64] #pushblocks y
+pbX = [] #pushblocks x
+pbY = [] #pushblocks y
 bX = [] #blocks x
 bY = [] #blocks y
+hX = [] #holes x
+hY = [] #holes y
 rightPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #list of pushblocks 1 = pushable to right, 0 = unpushable to right
 leftPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #same goes for those 3
 upPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #btw, pushblocks limit is 15 for a level
@@ -38,7 +42,7 @@ pygame.mixer.music.play(0)
 
 def loadLevel():
     pygame.mixer.music.play()
-    global levelsLoaded
+    global levelsLoaded, x, y
     levelFile = open("levels/level" + str(levelsLoaded), "r")
     linesPlaced = 0
     while linesPlaced < 18:
@@ -46,7 +50,6 @@ def loadLevel():
         for albl in levelFile.readlines(linesPlaced + 1): #almost level blocks lines, basically a thing for levelBlocksLines
             albl = albl.replace("\n", "")
             levelBlocksLines = albl.split(" ")
-            print(levelBlocksLines)
             while blocksPlaced < 25:
                 if levelBlocksLines[blocksPlaced] == "01":
                     bX.append(blocksPlaced*32)
@@ -60,9 +63,14 @@ def loadLevel():
                     x = blocksPlaced*32
                     y = linesPlaced*32
 
+                elif levelBlocksLines[blocksPlaced] == "04":
+                    hX.append(blocksPlaced*32)
+                    hY.append(linesPlaced*32)
+
                 blocksPlaced = blocksPlaced + 1
             linesPlaced = linesPlaced + 1
     levelsLoaded = levelsLoaded + 1
+    levelFile.close()
 
 
 def drawPlayer(x, y):
@@ -84,6 +92,10 @@ def drawFloor():
         rD = rD + 1
 
 def drawAllBlocks(): #draws blocks and pushblocks
+    hD = 0 #holes drawn
+    while hD != len(hX):
+        dis.blit(holeSprite, (hX[hD], hY[hD]))
+        hD = hD + 1
     pD = 0 #pushblocks drawn
     while pD != len(pbX):
         dis.blit(pushblockSprite, (pbX[pD], pbY[pD]))
@@ -181,6 +193,21 @@ def movePushblocks(): #moves pushblocks (how unexpected, huh?)
                 pbY[pM] = pbY[pM] + 3
         pM = pM + 1
 
+def checkInteractiveBlocks():
+    hC = 0 #holess checked
+    while hC != len(hY):
+        pC = 0 #pushblocks checked
+        while pC != len(pbY):
+            if pbX[pC] >= hX[hC] and pbX[pC] <= hX[hC] + 31 and pbY[pC] >= hY[hC] and pbY[pC] <= hX[hC] + 31:
+                pbX.pop(pC)
+                pbY.pop(pC)
+                hX.pop(hC)
+                hY.pop(hC)
+                pC = pC - 1
+                hC = hC - 1
+            pC = pC + 1
+        hC = hC + 1
+
 def checkPlayerCollisions(): #this checks for blocks collisions with player
     bC = 0 #blocks checked
     pC = 0 #pushblocks checked
@@ -213,6 +240,19 @@ def checkPlayerCollisions(): #this checks for blocks collisions with player
                 if downPushable[pC] == 0:
                     DdownG = True
         pC = pC + 1
+    hC = 0
+    while hC != len(hX):
+        if rightG or leftG or upG or downG:
+            if hX[hC] < x + 32 and hX[hC] > x - 8 and hY[hC] < y + 24 and hY[hC] > y - 24:
+                DrightG = True
+            elif hX[hC] > x - 32 and hX[hC] < x + 8 and hY[hC] < y + 24 and hY[hC] > y - 24:
+                DleftG = True
+            elif hY[hC] > y - 32 and hY[hC] < y - 8 and hX[hC] < x + 24 and hX[hC] > x - 24: 
+                DupG = True
+            elif hY[hC] < y + 32 and hY[hC] > y + 8 and hX[hC] < x + 24 and hX[hC] > x - 24: 
+                DdownG = True
+        hC = hC + 1
+
 loadLevel()
 
 while not gameOver:
@@ -246,10 +286,11 @@ while not gameOver:
         y = y + 3
     if rightG and not DrightG:
         x = x + 3
+    checkInteractiveBlocks()
     movePushblocks()
     drawFloor()
-    drawPlayer(x, y)
     drawAllBlocks()
+    drawPlayer(x, y)
     pygame.display.update()
     clock.tick(30)
 
