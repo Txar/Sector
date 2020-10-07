@@ -19,13 +19,14 @@ downG = False #down go (for player)
 rightG = False #right go (for player)
 pbX = [64, 640, 96] #pushblocks x
 pbY = [64, 128, 64] #pushblocks y
-bX = [128, 160, 192, 224] #blocks x
-bY = [64, 64, 64, 64] #blocks y
+bX = [] #blocks x
+bY = [] #blocks y
 rightPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #list of pushblocks 1 = pushable to right, 0 = unpushable to right
 leftPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #same goes for those 3
 upPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #btw, pushblocks limit is 15 for a level
 downPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 DrightG, DleftG, DupG, DdownG = False, False, False, False #dont go right/left/up/down
+levelsLoaded = 1
 
 pygame.init()
 dis = pygame.display.set_mode((width, height))
@@ -37,6 +38,32 @@ pygame.mixer.music.play(0)
 
 def loadLevel():
     pygame.mixer.music.play()
+    global levelsLoaded
+    levelFile = open("levels/level" + str(levelsLoaded), "r")
+    linesPlaced = 0
+    while linesPlaced < 18:
+        blocksPlaced = 0
+        for albl in levelFile.readlines(linesPlaced + 1): #almost level blocks lines, basically a thing for levelBlocksLines
+            albl = albl.replace("\n", "")
+            levelBlocksLines = albl.split(" ")
+            print(levelBlocksLines)
+            while blocksPlaced < 25:
+                if levelBlocksLines[blocksPlaced] == "01":
+                    bX.append(blocksPlaced*32)
+                    bY.append(linesPlaced*32)
+
+                elif levelBlocksLines[blocksPlaced] == "02":
+                    pbX.append(blocksPlaced*32)
+                    pbY.append(linesPlaced*32)
+
+                elif levelBlocksLines[blocksPlaced] == "03":
+                    x = blocksPlaced*32
+                    y = linesPlaced*32
+
+                blocksPlaced = blocksPlaced + 1
+            linesPlaced = linesPlaced + 1
+    levelsLoaded = levelsLoaded + 1
+
 
 def drawPlayer(x, y):
     dis.blit(playerSprite, (x, y))
@@ -62,7 +89,7 @@ def drawAllBlocks(): #draws blocks and pushblocks
         dis.blit(pushblockSprite, (pbX[pD], pbY[pD]))
         pD = pD + 1
     bD = 0 #blocks drawn
-    while bD != len(bX):
+    while bD != len(bY):
         dis.blit(blockSprite, (bX[bD], bY[bD]))
         bD = bD + 1
 
@@ -186,7 +213,7 @@ def checkPlayerCollisions(): #this checks for blocks collisions with player
                 if downPushable[pC] == 0:
                     DdownG = True
         pC = pC + 1
-
+loadLevel()
 
 while not gameOver:
     for event in pygame.event.get():
