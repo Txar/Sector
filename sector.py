@@ -12,6 +12,7 @@ pushblockSprite = pygame.image.load("pushblock.png")
 floorSprite = pygame.image.load("floortile.png")
 blockSprite = pygame.image.load("block.png")
 holeSprite = pygame.image.load("hole.png")
+sectorIcon = pygame.image.load("testicon.png")
 
 x = 400 #player x
 y = 300 #player y
@@ -25,6 +26,9 @@ bX = [] #blocks x
 bY = [] #blocks y
 hX = [] #holes x
 hY = [] #holes y
+hrX = [] #horizontal rails x
+hrY = [] #horizontal rails y
+levelExit = [0, 0] #exit coordinates
 rightPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #list of pushblocks 1 = pushable to right, 0 = unpushable to right
 leftPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #same goes for those 3
 upPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #btw, pushblocks limit is 15 for a level
@@ -38,11 +42,20 @@ pygame.display.update()
 pygame.display.set_caption("Sector")
 clock = pygame.time.Clock()
 pygame.mixer.music.load("theme1.mp3")
-pygame.mixer.music.play(0)
+pygame.display.set_icon(sectorIcon)
+pushblockSound = pygame.mixer.Sound("pbs.wav")
 
 def loadLevel():
-    pygame.mixer.music.play()
-    global levelsLoaded, x, y
+    global levelsLoaded, x, y, pbX, pbY, bX, bY, hX, hY, hrX, hrY
+    pbX = [] #pushblocks x
+    pbY = [] #pushblocks y
+    bX = [] #blocks x
+    bY = [] #blocks y
+    hX = [] #holes x
+    hY = [] #holes y
+    hrX = [] #horizontal rails x
+    hrY = [] #horizontal rails y
+    #pygame.mixer.music.play()
     levelFile = open("levels/level" + str(levelsLoaded), "r")
     linesPlaced = 0
     while linesPlaced < 18:
@@ -66,6 +79,10 @@ def loadLevel():
                 elif levelBlocksLines[blocksPlaced] == "04":
                     hX.append(blocksPlaced*32)
                     hY.append(linesPlaced*32)
+
+                elif levelBlocksLines[blocksPlaced] == "05":
+                    levelExit[0] = blocksPlaced*32
+                    levelExit[1] = linesPlaced*32
 
                 blocksPlaced = blocksPlaced + 1
             linesPlaced = linesPlaced + 1
@@ -136,7 +153,7 @@ def movePushblocks(): #moves pushblocks (how unexpected, huh?)
                         mr = False
                 pm2 = pm2 + 1
             if mr:
-                pbX[pM] = pbX[pM] + 3
+                pbX[pM] = pbX[pM] + 4
 
         elif pbX[pM] > x - 32 and pbX[pM] < x + 8 and pbY[pM] < y + 24 and pbY[pM] > y - 24:
             pm2 = 0
@@ -154,7 +171,7 @@ def movePushblocks(): #moves pushblocks (how unexpected, huh?)
                         ml = False
                 pm2 = pm2 + 1
             if ml:
-                pbX[pM] = pbX[pM] - 3
+                pbX[pM] = pbX[pM] - 4
 
         elif pbY[pM] > y - 32 and pbY[pM] < y - 8 and pbX[pM] < x + 24 and pbX[pM] > x - 24: 
             pm2 = 0
@@ -172,7 +189,7 @@ def movePushblocks(): #moves pushblocks (how unexpected, huh?)
                         mu = False
                 pm2 = pm2 + 1
             if mu:
-                pbY[pM] = pbY[pM] - 3
+                pbY[pM] = pbY[pM] - 4
 
         elif pbY[pM] < y + 32 and pbY[pM] > y + 8 and pbX[pM] < x + 24 and pbX[pM] > x - 24:
             pm2 = 0
@@ -190,15 +207,17 @@ def movePushblocks(): #moves pushblocks (how unexpected, huh?)
                         md = False
                 pm2 = pm2 + 1
             if md:
-                pbY[pM] = pbY[pM] + 3
+                pbY[pM] = pbY[pM] + 4
         pM = pM + 1
+    #if mu or mr or ml or md:
+        #pushblockSound.play()
 
 def checkInteractiveBlocks():
     hC = 0 #holess checked
     while hC != len(hY):
         pC = 0 #pushblocks checked
         while pC != len(pbY):
-            if pbX[pC] >= hX[hC] and pbX[pC] <= hX[hC] + 31 and pbY[pC] >= hY[hC] and pbY[pC] <= hX[hC] + 31:
+            if pbX[pC] >= hX[hC] and pbX[pC] <= hX[hC] + 31 and pbY[pC] >= hY[hC] and pbY[pC] <= hY[hC] + 31:
                 pbX.pop(pC)
                 pbY.pop(pC)
                 hX.pop(hC)
@@ -253,6 +272,9 @@ def checkPlayerCollisions(): #this checks for blocks collisions with player
                 DdownG = True
         hC = hC + 1
 
+    if levelExit[0] >= x and levelExit[0] <= x + 31 and levelExit[1] >= y and levelExit[1] <= y + 31:
+        loadLevel()
+
 loadLevel()
 
 while not gameOver:
@@ -279,13 +301,13 @@ while not gameOver:
             gameOver = True
     checkPlayerCollisions()
     if upG and not DupG:
-        y = y - 3
+        y = y - 4
     if leftG and not DleftG:
-        x = x - 3
+        x = x - 4
     if downG and not DdownG:
-        y = y + 3
+        y = y + 4
     if rightG and not DrightG:
-        x = x + 3
+        x = x + 4
     checkInteractiveBlocks()
     movePushblocks()
     drawFloor()
