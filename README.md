@@ -6,8 +6,13 @@ Uh... that's it.
 Some stuff if you wanna contribute:
 Tiles:
   00 is floor
+  
   01 is wall
+  
   02 is block (pushable)
+  
   03 is player
+  
   04 is hole
+  
   05 is  horizontal rails... but do not use them because theyre not done yet
