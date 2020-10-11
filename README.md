@@ -4,7 +4,9 @@ Trello: https://trello.com/b/ZUbwRU2V/sector
 Uh... that's it.
 
 Some stuff if you wanna contribute:
+
 Tiles:
+  
   00 is floor
   
   01 is wall
@@ -15,4 +17,4 @@ Tiles:
   
   04 is hole
   
-  05 is  horizontal rails... but do not use them because theyre not done yet
+  05 is exit
