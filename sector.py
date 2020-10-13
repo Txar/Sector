@@ -1,12 +1,15 @@
 import pygame
 import sys
+import os.path
 
 #Sector by Txar
 #big thanks to Xelo and ThePythonGuy3 as they helped me with some of the code <3
+#print(os.path.isfile("h"))
 
 width = 800
 height = 576
 gameOver = False
+gameMode = 0 #0 is menu, 1 is level
 playerSprite = pygame.image.load("sprites/pushblock.png")
 pushblockSprite = pygame.image.load("sprites/pushblock.png")
 floorSprite = pygame.image.load("sprites/floort.png")
@@ -14,6 +17,7 @@ blockSprite = pygame.image.load("sprites/testicon.png")
 holeSprite = pygame.image.load("sprites/hole.png")
 sectorIcon = pygame.image.load("sprites/testicon.png")
 restartButtonSprite = pygame.image.load("sprites/restartButton.png")
+playButtonSprite = pygame.image.load("sprites/playButton.png")
 
 x = 400 #player x
 y = 300 #player y
@@ -22,6 +26,7 @@ leftG = False #left go (for player)
 downG = False #down go (for player)
 rightG = False #right go (for player)
 mouseKeyPressed = False #do i need to explain this?
+levelsCompleted = [0] # *useful comment*
 pbX = [] #pushblocks x
 pbY = [] #pushblocks y
 bX = [] #blocks x
@@ -30,7 +35,10 @@ hX = [] #holes x
 hY = [] #holes y
 hrX = [] #horizontal rails x
 hrY = [] #horizontal rails y
+
 restartButton = [768, 0] #restart button coordinates
+playButton = [256, 256] #play button coordinates
+
 levelExit = [0, 0] #exit coordinates
 rightPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #list of pushblocks 1 = pushable to right, 0 = unpushable to right
 leftPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #same goes for those 3
@@ -44,9 +52,9 @@ dis = pygame.display.set_mode((width, height))
 pygame.display.update()
 pygame.display.set_caption("Sector")
 clock = pygame.time.Clock()
-pygame.mixer.music.load("theme1.mp3")
+pygame.mixer.music.load("sounds/theme1.mp3")
 pygame.display.set_icon(sectorIcon)
-pushblockSound = pygame.mixer.Sound("pbs.wav")
+pushblockSound = pygame.mixer.Sound("sounds/pbs.wav")
 
 def loadLevel():
     global levelsLoaded, x, y, pbX, pbY, bX, bY, hX, hY, hrX, hrY
@@ -59,7 +67,12 @@ def loadLevel():
     hrX = [] #horizontal rails x
     hrY = [] #horizontal rails y
     #pygame.mixer.music.play()
-    levelFile = open("levels/level" + str(levelsLoaded), "r")
+    progressData = open("gameData/progress.srgd", "w+")
+    pds = progressData.readlines()
+    pds[0] = int(pds[0]) + 1
+    progressData.writelines(str(pds))
+    filename = "levels/level" + str(levelsLoaded) + ".srlv"
+    levelFile = open(filename, "r")
     linesPlaced = 0
     while linesPlaced < 18:
         blocksPlaced = 0
@@ -279,20 +292,37 @@ def checkPlayerCollisions(): #this checks for blocks collisions with player
         hC = hC + 1
 
 def checkMouseButtons():
-    global levelsLoaded
+    global levelsLoaded, gameMode, levelsCompleted, levelsLoaded, mouseKeyPressed
     mousePos = pygame.mouse.get_pos()
-    print(mousePos)
-    if mousePos[0] < restartButton[0] + 32 and mousePos[0] > restartButton[0] and mousePos[1] > restartButton[1] and mousePos[1] < restartButton[1] + 32:
-        levelsLoaded = levelsLoaded - 1
-        loadLevel()
+    if gameMode == 1:
+        if mousePos[0] < restartButton[0] + 32 and mousePos[0] > restartButton[0] and mousePos[1] > restartButton[1] and mousePos[1] < restartButton[1] + 32:
+            levelsLoaded = levelsLoaded - 1
+            loadLevel()
+    elif gameMode == 0:
+        if mousePos[0] < playButton[0] + 32 and mousePos[0] > playButton[0] and mousePos[1] > playButton[1] and mousePos[1] < playButton[1] + 32:
+            lC = 1 #levels checked
+            while True:
+                filename = "levels/level" + str(lC) + ".srlv"
+                if os.path.exists(filename) == False:
+                    progressSave = open("gameData/progress.srgd", "r")
+                    levelsCompleted = progressSave.readlines(1)
+                    levelsLoaded = int(levelsCompleted[0]) + 1
+                    progressSave.close()
+                    gameMode = 1
+                    loadLevel()
+                    mouseKeyPressed = False
+                    break
+                lC = lC + 1
+
+
 
 def drawUi():
     global gameMode
     if gameMode == 1:
         dis.blit(restartButtonSprite, (restartButton[0], restartButton[1]))
+    if gameMode == 0:
+        dis.blit(playButtonSprite, (playButton[0], playButton[1]))
 
-gameMode = 1
-loadLevel()
 
 while not gameOver:
     mouseKeyPressed = False
@@ -338,6 +368,8 @@ while not gameOver:
     drawPlayer(x, y)
     if mouseKeyPressed:
         checkMouseButtons()
+    if gameMode == 0:
+        drawFloor()
     drawUi()
     pygame.display.update()
     clock.tick(30)
