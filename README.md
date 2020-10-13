@@ -18,3 +18,13 @@ Tiles:
   04 is hole
   
   05 is exit
+  
+  
+  
+Files extensions:
+
+  (generally, "sr" is "sector", "lv" is level, "gd", is game data)
+
+  .srlv - sector level
+  
+  .srgd - sector game data
