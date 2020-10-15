@@ -24,7 +24,9 @@ def loadLevelFile(levelName):
 	loadedLevel = open("levels/" + levelName)
 	for rowsLoaded in range(0, 18):
 		wholeLevel[rowsLoaded].append(loadedLevel.readlines(rowsLoaded + 1))
-		wholeLevel[rowsLoaded] = str(wholeLevel[rowsLoaded]).replace("\\n", " ")
+		wholeLevel[rowsLoaded] = str(wholeLevel[rowsLoaded]).replace("\\n", "")
+		wholeLevel[rowsLoaded] = str(wholeLevel[rowsLoaded]).replace("[['", "")
+		wholeLevel[rowsLoaded] = str(wholeLevel[rowsLoaded]).replace("']]", "")
 		wholeLevel[rowsLoaded] = wholeLevel[rowsLoaded].split(" ")
 
 def drawLevel():
@@ -39,7 +41,7 @@ def drawLevel():
 
 
 loadLevelFile("level1.srlv")
-print(wholeLevel)
+print(wholeLevel[0][0])
 
 pygame.init()
 dis = pygame.display.set_mode((width, height))
