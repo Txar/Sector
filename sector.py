@@ -1,6 +1,4 @@
-import pygame
-import sys
-import os.path
+import pygame, sys, os
 
 #Sector by Txar
 #big thanks to Xelo and ThePythonGuy3 as they helped me with some of the code <3
@@ -46,18 +44,10 @@ upPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #btw, pushblocks limi
 downPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 DrightG, DleftG, DupG, DdownG = False, False, False, False #dont go right/left/up/down
 levelsLoaded = 1
-
-pygame.init()
-dis = pygame.display.set_mode((width, height))
-pygame.display.update()
-pygame.display.set_caption("Sector")
-clock = pygame.time.Clock()
-pygame.mixer.music.load("sounds/theme1.mp3")
-pygame.display.set_icon(sectorIcon)
-pushblockSound = pygame.mixer.Sound("sounds/pbs.wav")
+existingLevels = 0
 
 def loadLevel():
-    global levelsLoaded, x, y, pbX, pbY, bX, bY, hX, hY, hrX, hrY
+    global levelsLoaded, x, y, pbX, pbY, bX, bY, hX, hY, hrX, hrY, existingLevels, gameMode
     pbX = [] #pushblocks x
     pbY = [] #pushblocks y
     bX = [] #blocks x
@@ -67,10 +57,13 @@ def loadLevel():
     hrX = [] #horizontal rails x
     hrY = [] #horizontal rails y
     #pygame.mixer.music.play()
-    progressData = open("gameData/progress.srgd", "w+")
-    pds = progressData.readlines()
-    pds[0] = int(pds[0]) + 1
+    progressData = open("data/progress.srgd", "w")
+    pds = int(levelsCompleted[0])
     progressData.writelines(str(pds))
+    progressData.close()
+    if levelsLoaded >= existingLevels:
+        gameMode = 0
+        return
     filename = "levels/level" + str(levelsLoaded) + ".srlv"
     levelFile = open(filename, "r")
     linesPlaced = 0
@@ -233,7 +226,7 @@ def checkInteractiveBlocks():
     while hC != len(hY):
         pC = 0 #pushblocks checked
         while pC != len(pbY):
-            if pbX[pC] >= hX[hC] and pbX[pC] <= hX[hC] + 31 and pbY[pC] >= hY[hC] and pbY[pC] <= hY[hC] + 31:
+            if pbX[pC] + 31 >= hX[hC] and pbX[pC] <= hX[hC] + 31 and pbY[pC] + 31 >= hY[hC] and pbY[pC] <= hY[hC] + 31:
                 #drawFallingBlock(hX[hC], hY[hC]) 
                 pbX.pop(pC)
                 pbY.pop(pC)
@@ -245,7 +238,9 @@ def checkInteractiveBlocks():
         hC = hC + 1
 
 def checkPlayerCollisions(): #this checks for blocks collisions with player
+    global levelsCompleted
     if levelExit[0] >= x - 8 and levelExit[0] <= x + 40 and levelExit[1] >= y - 8 and levelExit[1] <= y + 40:
+        levelsCompleted[0] = int(levelsCompleted[0]) + 1
         loadLevel()
     bC = 0 #blocks checked
     pC = 0 #pushblocks checked
@@ -292,7 +287,7 @@ def checkPlayerCollisions(): #this checks for blocks collisions with player
         hC = hC + 1
 
 def checkMouseButtons():
-    global levelsLoaded, gameMode, levelsCompleted, levelsLoaded, mouseKeyPressed
+    global levelsLoaded, gameMode, levelsCompleted, levelsLoaded, mouseKeyPressed, existingLevels
     mousePos = pygame.mouse.get_pos()
     if gameMode == 1:
         if mousePos[0] < restartButton[0] + 32 and mousePos[0] > restartButton[0] and mousePos[1] > restartButton[1] and mousePos[1] < restartButton[1] + 32:
@@ -304,17 +299,16 @@ def checkMouseButtons():
             while True:
                 filename = "levels/level" + str(lC) + ".srlv"
                 if os.path.exists(filename) == False:
-                    progressSave = open("gameData/progress.srgd", "r")
+                    progressSave = open("data/progress.srgd", "r")
                     levelsCompleted = progressSave.readlines(1)
                     levelsLoaded = int(levelsCompleted[0]) + 1
                     progressSave.close()
                     gameMode = 1
+                    existingLevels = lC
                     loadLevel()
                     mouseKeyPressed = False
                     break
                 lC = lC + 1
-
-
 
 def drawUi():
     global gameMode
@@ -323,6 +317,13 @@ def drawUi():
     if gameMode == 0:
         dis.blit(playButtonSprite, (playButton[0], playButton[1]))
 
+pygame.init()
+dis = pygame.display.set_mode((width, height))
+pygame.display.set_caption("Sector")
+clock = pygame.time.Clock()
+pygame.mixer.music.load("sounds/theme1.mp3")
+pygame.display.set_icon(sectorIcon)
+pushblockSound = pygame.mixer.Sound("sounds/pbs.wav")
 
 while not gameOver:
     mouseKeyPressed = False
