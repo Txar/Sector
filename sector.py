@@ -1,4 +1,4 @@
-import pygame, sys, os
+import pygame, sys, os, math
 
 #Sector by Txar
 #big thanks to Xelo and ThePythonGuy3 as they helped me with some of the code <3
@@ -293,6 +293,7 @@ def checkMouseButtons():
         if mousePos[0] < restartButton[0] + 32 and mousePos[0] > restartButton[0] and mousePos[1] > restartButton[1] and mousePos[1] < restartButton[1] + 32:
             levelsLoaded = levelsLoaded - 1
             loadLevel()
+            #exec(open("levelEditor.py").read())
     elif gameMode == 0:
         if mousePos[0] < playButton[0] + 32 and mousePos[0] > playButton[0] and mousePos[1] > playButton[1] and mousePos[1] < playButton[1] + 32:
             lC = 1 #levels checked
