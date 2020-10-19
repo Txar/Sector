@@ -30,6 +30,7 @@ blockSprite = pygame.image.load("sprites/testicon.png")
 holeSprite = pygame.image.load("sprites/hole.png")
 sectorIcon = pygame.image.load("sprites/testicon.png")
 tileOutline = pygame.image.load("sprites/tileOutline.png")
+horizontalRailsSprite = pygame.image.load("sprites/horizontalRails.png")
 
 def loadLevelFile(levelName):
 	global lastUsedLevel, wholeLevel
@@ -39,8 +40,8 @@ def loadLevelFile(levelName):
 	for rowsLoaded in range(0, 18):
 		wholeLevel[rowsLoaded].append(loadedLevel.readlines(rowsLoaded + 1))
 		wholeLevel[rowsLoaded] = str(wholeLevel[rowsLoaded]).replace("\\n", "")
-		wholeLevel[rowsLoaded] = str(wholeLevel[rowsLoaded]).replace("[['", "")
-		wholeLevel[rowsLoaded] = str(wholeLevel[rowsLoaded]).replace("']]", "")
+		wholeLevel[rowsLoaded] = str(wholeLevel[rowsLoaded]).replace("[['", "") #yes, what the fuck?
+		wholeLevel[rowsLoaded] = str(wholeLevel[rowsLoaded]).replace("']]", "") #i actually dont know ;-;
 		wholeLevel[rowsLoaded] = wholeLevel[rowsLoaded].split(" ")
 
 def drawLevel():
@@ -59,6 +60,8 @@ def drawLevel():
 				dis.blit(playerSprite, (int(x), int(y)))
 			if wholeLevel[rowsDrawn][columnsDrawn] == "04":
 				dis.blit(holeSprite, (int(x), int(y)))
+			if wholeLevel[rowsDrawn][columnsDrawn] == "06":
+				dis.blit(horizontalRailsSprite, (int(x), int(y)))
 
 def roundTo32(x, base = 32):
     return int(base * math.ceil(float(x) / base) - 32)
@@ -93,6 +96,8 @@ def changeSelectedBlock():
 		useBlock = "04"
 	elif selectedBlock == 5:
 		useBlock = "05"
+	elif selectedBlock == 5:
+		useBlock = "06"
 
 def openLevelWindow():
 	global saveQuestion
@@ -112,6 +117,8 @@ def drawUi():
 		dis.blit(playerSprite, (32, 592))
 	if useBlock == "04":
 		dis.blit(holeSprite, (32, 592))
+	if useBlock == "06":
+		dis.blit(horizontalRailsSprite, (32, 592))
 
 def saveLevel():
 	global lastUsedLevel, wholeLevel, saveLevelName, save

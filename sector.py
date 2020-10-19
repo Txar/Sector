@@ -2,7 +2,6 @@ import pygame, sys, os, math
 
 #Sector by Txar
 #big thanks to Xelo and ThePythonGuy3 as they helped me with some of the code <3
-#print(os.path.isfile("h"))
 
 width = 800
 height = 576
@@ -16,6 +15,7 @@ holeSprite = pygame.image.load("sprites/hole.png")
 sectorIcon = pygame.image.load("sprites/testicon.png")
 restartButtonSprite = pygame.image.load("sprites/restartButton.png")
 playButtonSprite = pygame.image.load("sprites/playButton.png")
+horizontalRailsSprite = pygame.image.load("sprites/horizontalRails.png")
 
 x = 400 #player x
 y = 300 #player y
@@ -93,6 +93,10 @@ def loadLevel():
                     levelExit[0] = blocksPlaced*32
                     levelExit[1] = linesPlaced*32
 
+                elif levelBlocksLines[blocksPlaced] == "06":
+                    hrX.append(blocksPlaced*32)
+                    hrY.append(linesPlaced*32)
+
                 blocksPlaced = blocksPlaced + 1
             linesPlaced = linesPlaced + 1
     levelsLoaded = levelsLoaded + 1
@@ -118,6 +122,8 @@ def drawFloor():
         rD = rD + 1
 
 def drawAllBlocks(): #draws blocks and pushblocks
+    for hrD in range(0, len(hrX)):
+        dis.blit(horizontalRailsSprite, (hrX[hrD], hrY[hrD]))
     hD = 0 #holes drawn
     while hD != len(hX):
         dis.blit(holeSprite, (hX[hD], hY[hD]))
@@ -197,6 +203,12 @@ def movePushblocks(): #moves pushblocks (how unexpected, huh?)
                         upPushable[pM] = 0
                         mu = False
                 pm2 = pm2 + 1
+            cipbcm = 0
+            while cipbcm != len(hrY):
+                if hrY[cipbcm] > pbY[pM] - 32 and hrY[cipbcm] < pbY[pM] and hrX[cipbcm] < pbX[pM] + 24 and hrX[cipbcm] > pbX[pM] - 24:
+                    mu = False
+                    upPushable[pM] = 0
+                cipbcm = cipbcm + 1
             if mu:
                 pbY[pM] = pbY[pM] - 4
 
@@ -215,6 +227,12 @@ def movePushblocks(): #moves pushblocks (how unexpected, huh?)
                         downPushable[pM] = 0
                         md = False
                 pm2 = pm2 + 1
+            cipbcm = 0
+            while cipbcm != len(hrY):
+                if hrY[cipbcm] < pbY[pM] + 32 and hrY[cipbcm] > pbY[pM] and hrX[cipbcm] < pbX[pM] + 24 and hrX[cipbcm] > pbX[pM] - 24:
+                    md = False
+                    downPushable[pM] = 0
+                cipbcm = cipbcm + 1
             if md:
                 pbY[pM] = pbY[pM] + 4
         pM = pM + 1
@@ -232,8 +250,8 @@ def checkInteractiveBlocks():
                 pbY.pop(pC)
                 hX.pop(hC)
                 hY.pop(hC)
-                pC = pC - 1
                 hC = hC - 1
+                break
             pC = pC + 1
         hC = hC + 1
 
@@ -285,15 +303,23 @@ def checkPlayerCollisions(): #this checks for blocks collisions with player
             elif hY[hC] < y + 32 and hY[hC] > y and hX[hC] < x + 24 and hX[hC] > x - 24: 
                 DdownG = True
         hC = hC + 1
+    for hrC in range(0, len(hrX)):
+        if upG or downG:
+            if hrY[hrC] > y - 32 and hrY[hrC] < y and hrX[hrC] < x + 24 and hrX[hrC] > x - 24: 
+                DupG = True
+            elif hrY[hrC] < y + 32 and hrY[hrC] > y and hrX[hrC] < x + 24 and hrX[hrC] > x - 24: 
+                DdownG = True
 
 def checkMouseButtons():
     global levelsLoaded, gameMode, levelsCompleted, levelsLoaded, mouseKeyPressed, existingLevels
     mousePos = pygame.mouse.get_pos()
     if gameMode == 1:
         if mousePos[0] < restartButton[0] + 32 and mousePos[0] > restartButton[0] and mousePos[1] > restartButton[1] and mousePos[1] < restartButton[1] + 32:
-            levelsLoaded = levelsLoaded - 1
-            loadLevel()
-            #exec(open("levelEditor.py").read())
+            #levelsLoaded = levelsLoaded - 1
+            #loadLevel()
+            pygame.quit()
+            os.system("python " + "levelEditor.py")
+            sys.exit()
     elif gameMode == 0:
         if mousePos[0] < playButton[0] + 32 and mousePos[0] > playButton[0] and mousePos[1] > playButton[1] and mousePos[1] < playButton[1] + 32:
             lC = 1 #levels checked
