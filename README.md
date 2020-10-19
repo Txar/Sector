@@ -5,7 +5,7 @@ Uh... that's it.
 
 Some stuff if you wanna contribute:
 
-##Tiles:
+## Tiles:
   
 +  00 is floor
   
@@ -21,7 +21,7 @@ Some stuff if you wanna contribute:
   
   
   
-##Files extensions:
+## Files extensions:
 
   (generally, "sr" is "sector", "lv" is level, "gd", is game data)
 
