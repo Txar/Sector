@@ -7,16 +7,21 @@ width = 800
 height = 576
 gameOver = False
 gameMode = 0 #0 is menu, 1 is level
-playerSprite = pygame.image.load("sprites/pushblock.png")
+playerSprite = pygame.image.load("sprites/player.png")
+playerRightSprite = pygame.image.load("sprites/playerRight.png")
+playerLeftSprite = pygame.image.load("sprites/playerLeft.png")
+playerBackSprite = pygame.image.load("sprites/playerBack.png")
 pushblockSprite = pygame.image.load("sprites/pushblock.png")
-floorSprite = pygame.image.load("sprites/floort.png")
-blockSprite = pygame.image.load("sprites/testicon.png")
+floorSprite = pygame.image.load("sprites/floorTile.png")
+blockSprite = pygame.image.load("sprites/block.png")
 holeSprite = pygame.image.load("sprites/hole.png")
-sectorIcon = pygame.image.load("sprites/testicon.png")
+sectorIcon = pygame.image.load("sprites/icon.png")
 restartButtonSprite = pygame.image.load("sprites/restartButton.png")
 playButtonSprite = pygame.image.load("sprites/playButton.png")
 horizontalRailsSprite = pygame.image.load("sprites/horizontalRails.png")
-
+editorButtonSprite = pygame.image.load("sprites/pencil.png")
+exitButtonSprite = pygame.image.load("sprites/exitButton.png")
+playerFacing = 0
 x = 400 #player x
 y = 300 #player y
 upG = False #up go (for player)
@@ -35,7 +40,9 @@ hrX = [] #horizontal rails x
 hrY = [] #horizontal rails y
 
 restartButton = [768, 0] #restart button coordinates
-playButton = [256, 256] #play button coordinates
+playButton = [304, 256] #play button coordinates
+editorButton = [368, 256] #level editor coordinates
+exitButton = [432, 256] #exit button coordinates
 
 levelExit = [0, 0] #exit coordinates
 rightPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #list of pushblocks 1 = pushable to right, 0 = unpushable to right
@@ -104,7 +111,14 @@ def loadLevel():
 
 
 def drawPlayer(x, y):
-    dis.blit(playerSprite, (x, y))
+    if playerFacing == 0:
+        dis.blit(playerSprite, (x, y))
+    elif playerFacing == 1:
+        dis.blit(playerLeftSprite, (x, y))
+    elif playerFacing == 2:
+        dis.blit(playerBackSprite, (x, y))
+    elif playerFacing == 3:
+        dis.blit(playerRightSprite, (x, y))
     
 def drawFloor():
     cD = 0 #columns drawn
@@ -315,11 +329,8 @@ def checkMouseButtons():
     mousePos = pygame.mouse.get_pos()
     if gameMode == 1:
         if mousePos[0] < restartButton[0] + 32 and mousePos[0] > restartButton[0] and mousePos[1] > restartButton[1] and mousePos[1] < restartButton[1] + 32:
-            #levelsLoaded = levelsLoaded - 1
-            #loadLevel()
-            pygame.quit()
-            os.system("python " + "levelEditor.py")
-            sys.exit()
+            levelsLoaded = levelsLoaded - 1
+            loadLevel()
     elif gameMode == 0:
         if mousePos[0] < playButton[0] + 32 and mousePos[0] > playButton[0] and mousePos[1] > playButton[1] and mousePos[1] < playButton[1] + 32:
             lC = 1 #levels checked
@@ -336,6 +347,14 @@ def checkMouseButtons():
                     mouseKeyPressed = False
                     break
                 lC = lC + 1
+        elif mousePos[0] < editorButton[0] + 32 and mousePos[0] > editorButton[0] and mousePos[1] > editorButton[1] and mousePos[1] < editorButton[1] + 32:
+            pygame.quit()
+            os.system("python " + "levelEditor.py")
+            sys.exit()
+        elif mousePos[0] < exitButton[0] + 32 and mousePos[0] > exitButton[0] and mousePos[1] > exitButton[1] and mousePos[1] < exitButton[1] + 32:
+            pygame.quit()
+            sys.exit()
+
 
 def drawUi():
     global gameMode
@@ -343,6 +362,8 @@ def drawUi():
         dis.blit(restartButtonSprite, (restartButton[0], restartButton[1]))
     if gameMode == 0:
         dis.blit(playButtonSprite, (playButton[0], playButton[1]))
+        dis.blit(editorButtonSprite, (editorButton[0], editorButton[1]))
+        dis.blit(exitButtonSprite, (exitButton[0], exitButton[1]))
 
 pygame.init()
 dis = pygame.display.set_mode((width, height))
@@ -382,12 +403,16 @@ while not gameOver:
             mouseKeyPressed = True
     checkPlayerCollisions()
     if upG and not DupG:
+        playerFacing = 2
         y = y - 4
     if leftG and not DleftG:
+        playerFacing = 1
         x = x - 4
     if downG and not DdownG:
+        playerFacing = 0
         y = y + 4
     if rightG and not DrightG:
+        playerFacing = 3
         x = x + 4
     checkInteractiveBlocks()
     movePushblocks()

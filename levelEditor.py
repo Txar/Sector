@@ -9,7 +9,7 @@ LEFT = 1
 RIGHT = 3
 SCROLLDOWN = 4
 SCROLLUP = 5
-existingBlocksAmount = 5
+existingBlocksAmount = 6
 selectedBlock = 0
 useBlock = 0
 save = False
@@ -23,14 +23,15 @@ wholeLevel = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []
 
 width = 800
 height = 640
-playerSprite = pygame.image.load("sprites/pushblock.png")
+playerSprite = pygame.image.load("sprites/icon.png")
 pushblockSprite = pygame.image.load("sprites/pushblock.png")
-floorSprite = pygame.image.load("sprites/floort.png")
-blockSprite = pygame.image.load("sprites/testicon.png")
+floorSprite = pygame.image.load("sprites/floorTile.png")
+blockSprite = pygame.image.load("sprites/block.png")
 holeSprite = pygame.image.load("sprites/hole.png")
-sectorIcon = pygame.image.load("sprites/testicon.png")
+sectorIcon = pygame.image.load("sprites/icon.png")
 tileOutline = pygame.image.load("sprites/tileOutline.png")
 horizontalRailsSprite = pygame.image.load("sprites/horizontalRails.png")
+exitSprite = pygame.image.load("sprites/exit.png")
 
 def loadLevelFile(levelName):
 	global lastUsedLevel, wholeLevel
@@ -62,6 +63,8 @@ def drawLevel():
 				dis.blit(holeSprite, (int(x), int(y)))
 			if wholeLevel[rowsDrawn][columnsDrawn] == "06":
 				dis.blit(horizontalRailsSprite, (int(x), int(y)))
+			if wholeLevel[rowsDrawn][columnsDrawn] == "05":
+				dis.blit(exitSprite, (int(x), int(y)))
 
 def roundTo32(x, base = 32):
     return int(base * math.ceil(float(x) / base) - 32)
@@ -96,7 +99,7 @@ def changeSelectedBlock():
 		useBlock = "04"
 	elif selectedBlock == 5:
 		useBlock = "05"
-	elif selectedBlock == 5:
+	elif selectedBlock == 6:
 		useBlock = "06"
 
 def openLevelWindow():
@@ -119,6 +122,8 @@ def drawUi():
 		dis.blit(holeSprite, (32, 592))
 	if useBlock == "06":
 		dis.blit(horizontalRailsSprite, (32, 592))
+	if useBlock == "05":
+		dis.blit(exitSprite, (32, 592))
 
 def saveLevel():
 	global lastUsedLevel, wholeLevel, saveLevelName, save
@@ -149,6 +154,7 @@ loadLevelFile("level6.srlv")
 pygame.init()
 dis = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Sector - level editor")
+pygame.display.set_icon(sectorIcon)
 clock = pygame.time.Clock()
 
 while not gameOver:
