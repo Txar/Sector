@@ -23,7 +23,7 @@ Some stuff if you wanna contribute:
   
 ## Files extensions:
 
-  `(generally, "sr" is "sector", "lv" is level, "gd", is game data)`
+  `(generally, "sr" is "sector", "lv" is level, "gd" is game data)`
 
 +  `.srlv` - sector level
   
