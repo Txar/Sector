@@ -2,7 +2,7 @@ import pygame, sys, os, math
 
 #Sector by Txar
 #big thanks to Xelo and ThePythonGuy3 as they helped me with some of the code <3
-
+devMode = False
 width = 800
 height = 576
 gameOver = False
@@ -68,7 +68,6 @@ while True:
     lC = lC + 1
 
 def saveProgress():
-    print("saving")
     progressData = open("data/progress.srgd", "w")
     pds = int(levelsCompleted[0])
     progressData.writelines(str(pds))
@@ -269,6 +268,37 @@ def movePushblocks(): #moves pushblocks (how unexpected, huh?)
     #if mu or mr or ml or md:
         #pushblockSound.play()
 
+def roundTo32(x, base = 32):
+    return int(base * math.ceil(float(x) / base) - 32)
+
+def cheat():
+    if summonBox:
+        if playerFacing == 0:
+            pbX.append(x)
+            pbY.append(y + 32)
+        if playerFacing == 1:
+            pbX.append(x - 32)
+            pbY.append(y)
+        if playerFacing == 2:
+            pbX.append(x)
+            pbY.append(y - 32)
+        if playerFacing == 3:
+            pbX.append(x + 32)
+            pbY.append(y)
+    if summonWall:
+        if playerFacing == 0:
+            bX.append(x)
+            bY.append(y + 32)
+        if playerFacing == 1:
+            bX.append(x - 32)
+            bY.append(y)
+        if playerFacing == 2:
+            bX.append(x)
+            bY.append(y - 32)
+        if playerFacing == 3:
+            bX.append(x + 32)
+            bY.append(y)
+
 def checkInteractiveBlocks():
     hC = 0 #holess checked
     while hC != len(hY):
@@ -350,7 +380,6 @@ def checkMouseButtons():
     mousePos = pygame.mouse.get_pos()
     if gameMode == 1:
         if mousePos[0] < restartButton[0] + 32 and mousePos[0] > restartButton[0] and mousePos[1] > restartButton[1] and mousePos[1] < restartButton[1] + 32:
-            levelsLoaded = levelsLoaded - 1
             loadLevel()
 
     elif gameMode == 0:
@@ -369,7 +398,7 @@ def checkMouseButtons():
 
     elif gameMode == 2:
         if mousePos[0] < rightButton[0] + 32 and mousePos[0] > rightButton[0] and mousePos[1] > rightButton[1] and mousePos[1] < rightButton[1] + 32:
-            if levelsLoaded < int(levelsCompleted[0]):
+            if levelsLoaded < int(levelsCompleted[0]) + 1:
                 levelsLoaded = levelsLoaded + 1
                 loadLevel()
         if mousePos[0] < leftButton[0] + 32 and mousePos[0] > leftButton[0] and mousePos[1] > leftButton[1] and mousePos[1] < leftButton[1] + 32:
@@ -408,6 +437,7 @@ pygame.display.set_icon(sectorIcon)
 pushblockSound = pygame.mixer.Sound("sounds/pbs.wav")
 
 while not gameOver:
+    summonBox, summonWall, destroyWall = False, False, False
     mouseKeyPressed = False
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
@@ -421,6 +451,10 @@ while not gameOver:
                 rightG = True
             if event.key == pygame.K_r:
                 loadLevel()
+            if event.key == pygame.K_p:
+                summonBox = True
+            if event.key == pygame.K_i:
+                summonWall = True
         if gameMode == 0:
             x = 0
             y = 0
@@ -462,6 +496,8 @@ while not gameOver:
         checkMouseButtons()
     if gameMode == 0:
         drawFloor()
+    if devMode: #i find these 2 lines so funny
+        cheat()
     drawUi()
     pygame.display.update()
     clock.tick(30)
