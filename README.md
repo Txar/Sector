@@ -5,26 +5,26 @@ Uh... that's it.
 
 Some stuff if you wanna contribute:
 
-##Tiles:
+## Tiles:
   
-+  00 is floor
++  `00` is floor
   
-+  01 is wall
++  `01` is wall
   
-+  02 is block (pushable)
++  `02` is block (pushable)
   
-+  03 is player
++  `03` is player
   
-+  04 is hole
++  `04` is hole
   
-+  05 is exit
++  `05` is exit
   
   
   
-##Files extensions:
+## Files extensions:
 
-  (generally, "sr" is "sector", "lv" is level, "gd", is game data)
+  `(generally, "sr" is "sector", "lv" is level, "gd" is game data)`
 
-+  .srlv - sector level
++  `.srlv` - sector level
   
-+  .srgd - sector game data
++  `.srgd` - sector game data
