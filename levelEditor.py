@@ -149,7 +149,7 @@ def saveLevel():
 	newLevelFile.writelines(wholeLevel)
 	newLevelFile.close()"""
 
-loadLevelFile("level6.srlv")
+loadLevelFile("level7.srlv")
 
 pygame.init()
 dis = pygame.display.set_mode((width, height))

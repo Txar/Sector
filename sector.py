@@ -6,7 +6,7 @@ import pygame, sys, os, math
 width = 800
 height = 576
 gameOver = False
-gameMode = 0 #0 is menu, 1 is level
+gameMode = 0 #0 is menu, 1 is level, 2 is level select
 playerSprite = pygame.image.load("sprites/player.png")
 playerRightSprite = pygame.image.load("sprites/playerRight.png")
 playerLeftSprite = pygame.image.load("sprites/playerLeft.png")
@@ -21,6 +21,8 @@ playButtonSprite = pygame.image.load("sprites/playButton.png")
 horizontalRailsSprite = pygame.image.load("sprites/horizontalRails.png")
 editorButtonSprite = pygame.image.load("sprites/pencil.png")
 exitButtonSprite = pygame.image.load("sprites/exitButton.png")
+rightArrowSprite = pygame.image.load("sprites/arrowRight.png")
+leftArrowSprite = pygame.image.load("sprites/arrowLeft.png")
 playerFacing = 0
 x = 400 #player x
 y = 300 #player y
@@ -43,6 +45,8 @@ restartButton = [768, 0] #restart button coordinates
 playButton = [304, 256] #play button coordinates
 editorButton = [368, 256] #level editor coordinates
 exitButton = [432, 256] #exit button coordinates
+rightButton = [768, 256] #right arrow button coordinates
+leftButton = [0, 256] #left arrow button coordinates  
 
 levelExit = [0, 0] #exit coordinates
 rightPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #list of pushblocks 1 = pushable to right, 0 = unpushable to right
@@ -51,10 +55,27 @@ upPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #btw, pushblocks limi
 downPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 DrightG, DleftG, DupG, DdownG = False, False, False, False #dont go right/left/up/down
 levelsLoaded = 1
-existingLevels = 0
+lC = 1 #levels checked
+while True:
+    filename = "levels/level" + str(lC) + ".srlv"
+    if not os.path.exists(filename):
+        progressSave = open("data/progress.srgd", "r")
+        levelsCompleted = progressSave.readlines(1)
+        levelsLoaded = int(levelsCompleted[0]) + 1
+        progressSave.close()
+        existingLevels = lC
+        break
+    lC = lC + 1
+
+def saveProgress():
+    print("saving")
+    progressData = open("data/progress.srgd", "w")
+    pds = int(levelsCompleted[0])
+    progressData.writelines(str(pds))
+    progressData.close()
 
 def loadLevel():
-    global levelsLoaded, x, y, pbX, pbY, bX, bY, hX, hY, hrX, hrY, existingLevels, gameMode
+    global levelsLoaded, x, y, pbX, pbY, bX, bY, hX, hY, hrX, hrY, existingLevels, gameMode, levelsCompleted
     pbX = [] #pushblocks x
     pbY = [] #pushblocks y
     bX = [] #blocks x
@@ -64,11 +85,7 @@ def loadLevel():
     hrX = [] #horizontal rails x
     hrY = [] #horizontal rails y
     #pygame.mixer.music.play()
-    progressData = open("data/progress.srgd", "w")
-    pds = int(levelsCompleted[0])
-    progressData.writelines(str(pds))
-    progressData.close()
-    if levelsLoaded >= existingLevels:
+    if levelsLoaded >= int(levelsCompleted[0]) + 2 or levelsLoaded >= existingLevels:
         gameMode = 0
         return
     filename = "levels/level" + str(levelsLoaded) + ".srlv"
@@ -106,7 +123,6 @@ def loadLevel():
 
                 blocksPlaced = blocksPlaced + 1
             linesPlaced = linesPlaced + 1
-    levelsLoaded = levelsLoaded + 1
     levelFile.close()
 
 
@@ -270,9 +286,14 @@ def checkInteractiveBlocks():
         hC = hC + 1
 
 def checkPlayerCollisions(): #this checks for blocks collisions with player
-    global levelsCompleted
+    global levelsCompleted, levelsLoaded
     if levelExit[0] >= x - 8 and levelExit[0] <= x + 40 and levelExit[1] >= y - 8 and levelExit[1] <= y + 40:
-        levelsCompleted[0] = int(levelsCompleted[0]) + 1
+        if levelsLoaded > int(levelsCompleted[0]):
+            levelsCompleted[0] = int(levelsCompleted[0]) + 1
+            levelsLoaded = levelsLoaded + 1
+        else:
+            levelsLoaded = levelsLoaded + 1
+        saveProgress()
         loadLevel()
     bC = 0 #blocks checked
     pC = 0 #pushblocks checked
@@ -331,22 +352,13 @@ def checkMouseButtons():
         if mousePos[0] < restartButton[0] + 32 and mousePos[0] > restartButton[0] and mousePos[1] > restartButton[1] and mousePos[1] < restartButton[1] + 32:
             levelsLoaded = levelsLoaded - 1
             loadLevel()
+
     elif gameMode == 0:
         if mousePos[0] < playButton[0] + 32 and mousePos[0] > playButton[0] and mousePos[1] > playButton[1] and mousePos[1] < playButton[1] + 32:
-            lC = 1 #levels checked
-            while True:
-                filename = "levels/level" + str(lC) + ".srlv"
-                if os.path.exists(filename) == False:
-                    progressSave = open("data/progress.srgd", "r")
-                    levelsCompleted = progressSave.readlines(1)
-                    levelsLoaded = int(levelsCompleted[0]) + 1
-                    progressSave.close()
-                    gameMode = 1
-                    existingLevels = lC
-                    loadLevel()
-                    mouseKeyPressed = False
-                    break
-                lC = lC + 1
+            if levelsLoaded >= int(levelsCompleted[0]) + 2 or levelsLoaded >= existingLevels:
+                levelsLoaded = levelsLoaded - 1
+            gameMode = 2
+            loadLevel()
         elif mousePos[0] < editorButton[0] + 32 and mousePos[0] > editorButton[0] and mousePos[1] > editorButton[1] and mousePos[1] < editorButton[1] + 32:
             pygame.quit()
             os.system("python " + "levelEditor.py")
@@ -355,15 +367,37 @@ def checkMouseButtons():
             pygame.quit()
             sys.exit()
 
+    elif gameMode == 2:
+        if mousePos[0] < rightButton[0] + 32 and mousePos[0] > rightButton[0] and mousePos[1] > rightButton[1] and mousePos[1] < rightButton[1] + 32:
+            if levelsLoaded < int(levelsCompleted[0]):
+                levelsLoaded = levelsLoaded + 1
+                loadLevel()
+        if mousePos[0] < leftButton[0] + 32 and mousePos[0] > leftButton[0] and mousePos[1] > leftButton[1] and mousePos[1] < leftButton[1] + 32:
+            if levelsLoaded > 1:
+                levelsLoaded = levelsLoaded - 1
+                loadLevel()
+        if mousePos[0] < playButton[0] + 32 and mousePos[0] > playButton[0] and mousePos[1] > playButton[1] and mousePos[1] < playButton[1] + 32:
+            gameMode = 1
+        if mousePos[0] < exitButton[0] + 32 and mousePos[0] > exitButton[0] and mousePos[1] > exitButton[1] and mousePos[1] < exitButton[1] + 32:
+            gameMode = 0
 
 def drawUi():
-    global gameMode
+    global gameMode, playButton, exitButton
     if gameMode == 1:
         dis.blit(restartButtonSprite, (restartButton[0], restartButton[1]))
     if gameMode == 0:
+        playButton = [304, 256]
+        exitButton = [432, 256]
         dis.blit(playButtonSprite, (playButton[0], playButton[1]))
         dis.blit(editorButtonSprite, (editorButton[0], editorButton[1]))
         dis.blit(exitButtonSprite, (exitButton[0], exitButton[1]))
+    if gameMode == 2:
+        playButton = [704, 0]
+        exitButton = [768, 0]
+        dis.blit(playButtonSprite, (playButton[0], playButton[1]))
+        dis.blit(exitButtonSprite, (exitButton[0], exitButton[1]))
+        dis.blit(rightArrowSprite, (rightButton[0], rightButton[1]))
+        dis.blit(leftArrowSprite, (leftButton[0], leftButton[1]))
 
 pygame.init()
 dis = pygame.display.set_mode((width, height))
@@ -386,8 +420,10 @@ while not gameOver:
             if event.key == pygame.K_d:
                 rightG = True
             if event.key == pygame.K_r:
-                levelsLoaded = levelsLoaded - 1
                 loadLevel()
+        if gameMode == 0:
+            x = 0
+            y = 0
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_w:
                 upG = False
@@ -401,7 +437,10 @@ while not gameOver:
             gameOver = True
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouseKeyPressed = True
-    checkPlayerCollisions()
+    if gameMode == 1:
+        checkPlayerCollisions()
+    if gameMode != 1:
+        DupG, DleftG, DdownG, DrightG = True, True, True, True
     if upG and not DupG:
         playerFacing = 2
         y = y - 4
