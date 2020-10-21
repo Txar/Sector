@@ -6,6 +6,7 @@ devMode = False
 width = 800
 height = 576
 gameOver = False
+wholeLevel = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
 gameMode = 0 #0 is menu, 1 is level, 2 is level select
 playerSprite = pygame.image.load("sprites/player.png")
 playerRightSprite = pygame.image.load("sprites/playerRight.png")
@@ -23,6 +24,25 @@ editorButtonSprite = pygame.image.load("sprites/pencil.png")
 exitButtonSprite = pygame.image.load("sprites/exitButton.png")
 rightArrowSprite = pygame.image.load("sprites/arrowRight.png")
 leftArrowSprite = pygame.image.load("sprites/arrowLeft.png")
+
+block0000 = pygame.image.load("sprites/block/block0000.png") #yes i could probably automate this but i wont :P
+block0001 = pygame.image.load("sprites/block/block0001.png")
+block0010 = pygame.image.load("sprites/block/block0010.png")
+block0100 = pygame.image.load("sprites/block/block0100.png")
+block1000 = pygame.image.load("sprites/block/block1000.png")
+block0011 = pygame.image.load("sprites/block/block0011.png")
+block0110 = pygame.image.load("sprites/block/block0110.png")
+block1100 = pygame.image.load("sprites/block/block1100.png")
+block1001 = pygame.image.load("sprites/block/block1001.png")
+block0101 = pygame.image.load("sprites/block/block0101.png")
+block1010 = pygame.image.load("sprites/block/block1010.png")
+block0111 = pygame.image.load("sprites/block/block0111.png")
+block1110 = pygame.image.load("sprites/block/block1110.png")
+block1011 = pygame.image.load("sprites/block/block1011.png")
+block1101 = pygame.image.load("sprites/block/block1101.png")
+block1111 = pygame.image.load("sprites/block/block1111.png")
+wallsSprite = pygame.Surface((width, height))
+
 playerFacing = 0
 x = 400 #player x
 y = 300 #player y
@@ -67,6 +87,39 @@ while True:
         break
     lC = lC + 1
 
+def generateWalls():
+    global wallsSprite, bX, bY, wholeLevel
+    cD = 0 #columns drawn
+    rD = 0 #rows drawn
+    columnPixel = -32
+    rowPixel = -32
+    while rD < 18:
+        while cD < 25:
+            wallsSprite.blit(floorSprite, (columnPixel + 32, rowPixel + 32)) 
+            columnPixel = columnPixel + 32
+            cD = cD + 1
+        cD = 0
+        columnPixel = -32
+        rowPixel = rowPixel + 32
+        rD = rD + 1
+    for columnsGenerated in range(0, 25):
+        for rowsGenerated in range(0, 18):
+            sprite = [0, 0, 0, 0]
+            x = columnsGenerated * 32
+            y = rowsGenerated * 32
+            if wholeLevel[rowsGenerated][columnsGenerated] == "01":
+                if rowsGenerated + 1 < 18:
+                    if wholeLevel[rowsGenerated + 1][columnsGenerated] == "01":
+                        sprite[0] = 1
+                if wholeLevel[rowsGenerated][columnsGenerated - 1] == "01":
+                    sprite[1] = 1
+                if wholeLevel[rowsGenerated - 1][columnsGenerated] == "01":
+                    sprite[2] = 1
+                if columnsGenerated + 1 < 25:
+                    if wholeLevel[rowsGenerated][columnsGenerated + 1] == "01":
+                        sprite[3] = 1
+                wallsSprite.blit(globals()[str("block" + str(sprite[0]) + str(sprite[1]) + str(sprite[2]) + str(sprite[3]))], (x, y))
+
 def saveProgress():
     progressData = open("data/progress.srgd", "w")
     pds = int(levelsCompleted[0])
@@ -74,7 +127,8 @@ def saveProgress():
     progressData.close()
 
 def loadLevel():
-    global levelsLoaded, x, y, pbX, pbY, bX, bY, hX, hY, hrX, hrY, existingLevels, gameMode, levelsCompleted
+    global levelsLoaded, x, y, pbX, pbY, bX, bY, hX, hY, hrX, hrY, existingLevels, gameMode, levelsCompleted, wholeLevel
+    wholeLevel = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
     pbX = [] #pushblocks x
     pbY = [] #pushblocks y
     bX = [] #blocks x
@@ -90,6 +144,16 @@ def loadLevel():
     filename = "levels/level" + str(levelsLoaded) + ".srlv"
     levelFile = open(filename, "r")
     linesPlaced = 0
+
+    loadedLevel = open(filename)
+    for rowsLoaded in range(0, 18):
+        wholeLevel[rowsLoaded].append(loadedLevel.readlines(rowsLoaded + 1))
+        wholeLevel[rowsLoaded] = str(wholeLevel[rowsLoaded]).replace("\\n", "")
+        wholeLevel[rowsLoaded] = str(wholeLevel[rowsLoaded]).replace("[['", "") #yes, what the fuck?
+        wholeLevel[rowsLoaded] = str(wholeLevel[rowsLoaded]).replace("']]", "") #i actually dont know ;-;
+        wholeLevel[rowsLoaded] = wholeLevel[rowsLoaded].split(" ")
+    loadedLevel.close()
+
     while linesPlaced < 18:
         blocksPlaced = 0
         for albl in levelFile.readlines(linesPlaced + 1): #almost level blocks lines, basically a thing for levelBlocksLines
@@ -134,23 +198,9 @@ def drawPlayer(x, y):
         dis.blit(playerBackSprite, (x, y))
     elif playerFacing == 3:
         dis.blit(playerRightSprite, (x, y))
-    
-def drawFloor():
-    cD = 0 #columns drawn
-    rD = 0 #rows drawn
-    columnPixel = -32
-    rowPixel = -32
-    while rD < 18:
-        while cD < 25:
-            dis.blit(floorSprite, (columnPixel + 32, rowPixel + 32)) 
-            columnPixel = columnPixel + 32
-            cD = cD + 1
-        cD = 0
-        columnPixel = -32
-        rowPixel = rowPixel + 32
-        rD = rD + 1
 
 def drawAllBlocks(): #draws blocks and pushblocks
+    dis.blit(wallsSprite, (0, 0))
     for hrD in range(0, len(hrX)):
         dis.blit(horizontalRailsSprite, (hrX[hrD], hrY[hrD]))
     hD = 0 #holes drawn
@@ -161,10 +211,6 @@ def drawAllBlocks(): #draws blocks and pushblocks
     while pD != len(pbX):
         dis.blit(pushblockSprite, (pbX[pD], pbY[pD]))
         pD = pD + 1
-    bD = 0 #blocks drawn
-    while bD != len(bY):
-        dis.blit(blockSprite, (bX[bD], bY[bD]))
-        bD = bD + 1
 
 def movePushblocks(): #moves pushblocks (how unexpected, huh?)
     pM = 0 #pushblocks moved
@@ -325,6 +371,7 @@ def checkPlayerCollisions(): #this checks for blocks collisions with player
             levelsLoaded = levelsLoaded + 1
         saveProgress()
         loadLevel()
+        generateWalls()
     bC = 0 #blocks checked
     pC = 0 #pushblocks checked
     global rightG, leftG, upG, downG, DrightG, DleftG, DupG, DdownG
@@ -381,6 +428,7 @@ def checkMouseButtons():
     if gameMode == 1:
         if mousePos[0] < restartButton[0] + 32 and mousePos[0] > restartButton[0] and mousePos[1] > restartButton[1] and mousePos[1] < restartButton[1] + 32:
             loadLevel()
+            generateWalls()
 
     elif gameMode == 0:
         if mousePos[0] < playButton[0] + 32 and mousePos[0] > playButton[0] and mousePos[1] > playButton[1] and mousePos[1] < playButton[1] + 32:
@@ -388,6 +436,7 @@ def checkMouseButtons():
                 levelsLoaded = levelsLoaded - 1
             gameMode = 2
             loadLevel()
+            generateWalls()
         elif mousePos[0] < editorButton[0] + 32 and mousePos[0] > editorButton[0] and mousePos[1] > editorButton[1] and mousePos[1] < editorButton[1] + 32:
             pygame.quit()
             os.system("python " + "levelEditor.py")
@@ -401,11 +450,14 @@ def checkMouseButtons():
             if levelsLoaded < int(levelsCompleted[0]) + 1:
                 levelsLoaded = levelsLoaded + 1
                 loadLevel()
+                generateWalls()
         if mousePos[0] < leftButton[0] + 32 and mousePos[0] > leftButton[0] and mousePos[1] > leftButton[1] and mousePos[1] < leftButton[1] + 32:
             if levelsLoaded > 1:
                 levelsLoaded = levelsLoaded - 1
                 loadLevel()
+                generateWalls()
         if mousePos[0] < playButton[0] + 32 and mousePos[0] > playButton[0] and mousePos[1] > playButton[1] and mousePos[1] < playButton[1] + 32:
+            generateWalls()
             gameMode = 1
         if mousePos[0] < exitButton[0] + 32 and mousePos[0] > exitButton[0] and mousePos[1] > exitButton[1] and mousePos[1] < exitButton[1] + 32:
             gameMode = 0
@@ -451,6 +503,7 @@ while not gameOver:
                 rightG = True
             if event.key == pygame.K_r:
                 loadLevel()
+                generateWalls()
             if event.key == pygame.K_p:
                 summonBox = True
             if event.key == pygame.K_i:
@@ -489,13 +542,10 @@ while not gameOver:
         x = x + 4
     checkInteractiveBlocks()
     movePushblocks()
-    drawFloor()
     drawAllBlocks()
     drawPlayer(x, y)
     if mouseKeyPressed:
         checkMouseButtons()
-    if gameMode == 0:
-        drawFloor()
     if devMode: #i find these 2 lines so funny
         cheat()
     drawUi()

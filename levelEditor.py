@@ -44,6 +44,7 @@ def loadLevelFile(levelName):
 		wholeLevel[rowsLoaded] = str(wholeLevel[rowsLoaded]).replace("[['", "") #yes, what the fuck?
 		wholeLevel[rowsLoaded] = str(wholeLevel[rowsLoaded]).replace("']]", "") #i actually dont know ;-;
 		wholeLevel[rowsLoaded] = wholeLevel[rowsLoaded].split(" ")
+	loadedLevel.close()
 
 def drawLevel():
 	global wholeLevel
