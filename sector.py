@@ -71,7 +71,7 @@ leftButton = [0, 256] #left arrow button coordinates
 levelExit = [0, 0] #exit coordinates
 rightPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #list of pushblocks 1 = pushable to right, 0 = unpushable to right
 leftPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #same goes for those 3
-upPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #btw, pushblocks limit is 15 for a level
+upPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #btw, pushblocks limit is 15 for a level because im stupid
 downPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 DrightG, DleftG, DupG, DdownG = False, False, False, False #dont go right/left/up/down
 levelsLoaded = 1
@@ -89,19 +89,14 @@ while True:
 
 def generateWalls():
     global wallsSprite, bX, bY, wholeLevel
-    cD = 0 #columns drawn
-    rD = 0 #rows drawn
     columnPixel = -32
     rowPixel = -32
-    while rD < 18:
-        while cD < 25:
+    for rD in range(0, 18):
+        for cD in range(0, 25):
             wallsSprite.blit(floorSprite, (columnPixel + 32, rowPixel + 32)) 
             columnPixel = columnPixel + 32
-            cD = cD + 1
-        cD = 0
         columnPixel = -32
         rowPixel = rowPixel + 32
-        rD = rD + 1
     for columnsGenerated in range(0, 25):
         for rowsGenerated in range(0, 18):
             sprite = [0, 0, 0, 0]
