@@ -19,11 +19,12 @@ holeSprite = pygame.image.load("sprites/hole.png")
 sectorIcon = pygame.image.load("sprites/icon.png")
 restartButtonSprite = pygame.image.load("sprites/restartButton.png")
 playButtonSprite = pygame.image.load("sprites/playButton.png")
-horizontalRailsSprite = pygame.image.load("sprites/horizontalRails.png")
 editorButtonSprite = pygame.image.load("sprites/pencil.png")
 exitButtonSprite = pygame.image.load("sprites/exitButton.png")
 rightArrowSprite = pygame.image.load("sprites/arrowRight.png")
 leftArrowSprite = pygame.image.load("sprites/arrowLeft.png")
+tilesSprites = pygame.image.load("sprites/tiles.png")
+railSprite = pygame.image.load("sprites/rail.png")
 wallsSprite = pygame.Surface((width, height))
 
 true = True #this made me laugh so hard that i will just leave it here
@@ -72,15 +73,34 @@ while True:
     lC = lC + 1
 
 def generateWalls():
+    if levelsLoaded >= int(levelsCompleted[0]) + 2 or levelsLoaded >= existingLevels:
+        return
     global wallsSprite, bX, bY, wholeLevel
     columnPixel = -32
     rowPixel = -32
     for rD in range(0, 18):
         for cD in range(0, 25):
-            wallsSprite.blit(floorSprite, (columnPixel + 32, rowPixel + 32)) 
+            variant = random.randint(0, 7)
+            wallsSprite.blit(tilesSprites, (columnPixel + 32, rowPixel + 32), (0, variant * 32, 32, variant * 32 + 32)) 
             columnPixel = columnPixel + 32
         columnPixel = -32
         rowPixel = rowPixel + 32
+
+    for rD in range(0, 18):
+        for cD in range(0, 25):
+            mask = 0
+            x = cD * 32
+            y = rD * 32
+            if wholeLevel[rD][cD] == "06":
+                if cD + 1 < 25:
+                    if wholeLevel[rD][cD + 1] == "06":
+                        mask = mask + 1
+                if cD - 1 < 25:
+                    if wholeLevel[rD][cD - 1] == "06":
+                        mask = mask + 2
+                wallsSprite.blit(railSprite, (x, y), (mask * 32, 0, 32, 32))
+
+
     for columnsGenerated in range(0, 25):
         for rowsGenerated in range(0, 18):
             mask = 0
@@ -98,7 +118,7 @@ def generateWalls():
                     if wholeLevel[rowsGenerated][columnsGenerated + 1] == "01":
                         mask = mask + 1
                 variant = random.randint(0, 0)
-                wallsSprite.blit(blockSprite, (x, y) ,(mask * 32, variant * 32, 32, variant * 32 + 32))
+                wallsSprite.blit(blockSprite, (x, y), (mask * 32, variant * 32, 32, variant * 32 + 32))
 
 def saveProgress():
     progressData = open("data/progress.srgd", "w")
@@ -181,8 +201,6 @@ def drawPlayer(x, y):
 
 def drawAllBlocks(): #draws blocks and pushblocks
     dis.blit(wallsSprite, (0, 0))
-    for hrD in range(0, len(hrX)):
-        dis.blit(horizontalRailsSprite, (hrX[hrD], hrY[hrD]))
     hD = 0 #holes drawn
     while hD != len(hX):
         dis.blit(holeSprite, (hX[hD], hY[hD]))
