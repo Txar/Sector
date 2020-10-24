@@ -28,3 +28,33 @@ Some stuff if you wanna contribute:
 +  `.srlv` - sector level
   
 +  `.srgd` - sector game data
+
+## Installation guide
+
+1. Create a virtual env
+
+  ```
+  python -m venv env
+  ```
+
+1. Activate virtual env
+
+  ```
+  source env/bin/activate
+  ```
+
+1. Install dependencies
+
+  ```
+  pip install -r requrements.txt
+  ```
+
+1. Run game or level editor
+
+  ```
+  python sector.py
+  ```
+
+  ```
+  python levelEditor.py
+  ```
