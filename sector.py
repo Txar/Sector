@@ -1,4 +1,4 @@
-import pygame, sys, os, math
+import pygame, sys, os, math, random
 
 #Sector by Txar
 #big thanks to Xelo and ThePythonGuy3 as they helped me with some of the code <3
@@ -24,25 +24,9 @@ editorButtonSprite = pygame.image.load("sprites/pencil.png")
 exitButtonSprite = pygame.image.load("sprites/exitButton.png")
 rightArrowSprite = pygame.image.load("sprites/arrowRight.png")
 leftArrowSprite = pygame.image.load("sprites/arrowLeft.png")
-
-block0000 = pygame.image.load("sprites/block/block0000.png") #yes i could probably automate this but i wont :P
-block0001 = pygame.image.load("sprites/block/block0001.png")
-block0010 = pygame.image.load("sprites/block/block0010.png")
-block0100 = pygame.image.load("sprites/block/block0100.png")
-block1000 = pygame.image.load("sprites/block/block1000.png")
-block0011 = pygame.image.load("sprites/block/block0011.png")
-block0110 = pygame.image.load("sprites/block/block0110.png")
-block1100 = pygame.image.load("sprites/block/block1100.png")
-block1001 = pygame.image.load("sprites/block/block1001.png")
-block0101 = pygame.image.load("sprites/block/block0101.png")
-block1010 = pygame.image.load("sprites/block/block1010.png")
-block0111 = pygame.image.load("sprites/block/block0111.png")
-block1110 = pygame.image.load("sprites/block/block1110.png")
-block1011 = pygame.image.load("sprites/block/block1011.png")
-block1101 = pygame.image.load("sprites/block/block1101.png")
-block1111 = pygame.image.load("sprites/block/block1111.png")
 wallsSprite = pygame.Surface((width, height))
 
+true = True #this made me laugh so hard that i will just leave it here
 playerFacing = 0
 x = 400 #player x
 y = 300 #player y
@@ -99,21 +83,22 @@ def generateWalls():
         rowPixel = rowPixel + 32
     for columnsGenerated in range(0, 25):
         for rowsGenerated in range(0, 18):
-            sprite = [0, 0, 0, 0]
+            mask = 0
             x = columnsGenerated * 32
             y = rowsGenerated * 32
             if wholeLevel[rowsGenerated][columnsGenerated] == "01":
                 if rowsGenerated + 1 < 18:
                     if wholeLevel[rowsGenerated + 1][columnsGenerated] == "01":
-                        sprite[0] = 1
+                        mask = mask + 8
                 if wholeLevel[rowsGenerated][columnsGenerated - 1] == "01":
-                    sprite[1] = 1
+                    mask = mask + 4
                 if wholeLevel[rowsGenerated - 1][columnsGenerated] == "01":
-                    sprite[2] = 1
+                    mask = mask + 2
                 if columnsGenerated + 1 < 25:
                     if wholeLevel[rowsGenerated][columnsGenerated + 1] == "01":
-                        sprite[3] = 1
-                wallsSprite.blit(globals()[str("block" + str(sprite[0]) + str(sprite[1]) + str(sprite[2]) + str(sprite[3]))], (x, y))
+                        mask = mask + 1
+                variant = random.randint(0, 0)
+                wallsSprite.blit(blockSprite, (x, y) ,(mask * 32, variant * 32, 32, variant * 32 + 32))
 
 def saveProgress():
     progressData = open("data/progress.srgd", "w")

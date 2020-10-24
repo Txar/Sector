@@ -53,7 +53,7 @@ def drawLevel():
 			x = int(columnsDrawn) * 32
 			y = int(rowsDrawn) * 32
 			if wholeLevel[rowsDrawn][columnsDrawn] == "01":
-				dis.blit(blockSprite, (int(x), int(y)))
+				dis.blit(blockSprite, (int(x), int(y)), (0, 0, 32, 32))
 			if wholeLevel[rowsDrawn][columnsDrawn] == "00" or wholeLevel[rowsDrawn][columnsDrawn] == "05":
 				dis.blit(floorSprite, (int(x), int(y)))
 			if wholeLevel[rowsDrawn][columnsDrawn] == "02":
