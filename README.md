@@ -1,6 +1,8 @@
 # Sector
 A simple puzzle game made in pygame. Don't roast me for terrible code, this is my first time making a thing like this.
+
 Trello: https://trello.com/b/ZUbwRU2V/sector
+
 
 Some stuff if you wanna contribute:
 
@@ -25,8 +27,6 @@ Some stuff if you wanna contribute:
   
   
 ## Files extensions:
-
-  `(generally, "sr" is "sector", "lv" is level, "gd" is game data)`
 
 +  `.srlv` - sector level
   
