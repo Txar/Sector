@@ -37,19 +37,19 @@ Some stuff if you wanna contribute:
   python -m venv env
   ```
 
-1. Activate virtual env
+2. Activate virtual env
 
   ```
   source env/bin/activate
   ```
 
-1. Install dependencies
+3. Install dependencies
 
   ```
   pip install -r requrements.txt
   ```
 
-1. Run game or level editor
+4. Run game or level editor
 
   ```
   python sector.py
