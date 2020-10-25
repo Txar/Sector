@@ -114,7 +114,7 @@ def drawUi():
 	if useBlock == "00":
 		dis.blit(floorSprite, (32, 592))
 	if useBlock == "01":
-		dis.blit(blockSprite, (32, 592))
+		dis.blit(blockSprite, (32, 592), (0, 0, 32, 32))
 	if useBlock == "02":
 		dis.blit(pushblockSprite, (32, 592))
 	if useBlock == "03":
