@@ -17,7 +17,8 @@ def dst(a, b):
     return math.sqrt(x_d ** 2 + y_d ** 2)
 
 def shadow(a, b):
-    return round(angleTo(a, b) + 180, 2)
+    return round(angleTo(a, b), 2)
+
 
 # example: angle = shadow(a, b)
 
@@ -229,9 +230,11 @@ def drawShadows(a):
     else:
         for i in lights:
             angle = shadow(a, i)
-            shadowScale = pygame.transform.scale(shadowSprite, (int(32 + dst(a, i)/8), 32))
-            shadowRot = pygame.transform.rotate(shadowScale, angle+90)
-            dis.blit(shadowRot, (a.x, a.y))
+            shadow_rect = shadowSprite.get_rect(center = (a.x, a.y))
+            shadowScale = pygame.transform.scale(shadowSprite, (int(128 - max(0, min(dst(a, i), 64))/2), 32))
+            shadowRot = pygame.transform.rotozoom(shadowScale, angle+90, 1)
+            shadowDraw = shadowRot.get_rect(center = (a.x, a.y))
+            dis.blit(shadowRot, shadowDraw)
         
 def drawPlayer(x, y):
     drawShadows(Vec2(x, y))
