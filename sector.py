@@ -1,4 +1,26 @@
 import pygame, sys, os, math, random
+from collections import namedtuple
+
+Vec2 = namedtuple('Vec2', 'x y')
+
+radDeg = 180 / math.pi
+
+# Vec2's
+def angleTo(a, b):
+    ang = math.atan2(b.x - a.x, b.y - a.y) * radDeg
+    if(ang < 0): ang += 360
+    return ang
+
+def dst(a, b):
+    x_d = b.x - a.x
+    y_d = b.y - a.y
+    return math.sqrt(x_d ** 2 + y_d ** 2)
+
+def shadow(a, b):
+    return round(angleTo(a, b) + 180, 2)
+
+# example: angle = shadow(a, b)
+
 
 #Sector by Txar
 #big thanks to Xelo and ThePythonGuy3 as they helped me with some of the code <3
@@ -12,6 +34,7 @@ playerSprite = pygame.image.load("sprites/player.png")
 playerRightSprite = pygame.image.load("sprites/playerRight.png")
 playerLeftSprite = pygame.image.load("sprites/playerLeft.png")
 playerBackSprite = pygame.image.load("sprites/playerBack.png")
+shadowSprite = pygame.image.load("sprites/shadow.png")
 pushblockSprite = pygame.image.load("sprites/pushblock.png")
 floorSprite = pygame.image.load("sprites/floorTile.png")
 blockSprite = pygame.image.load("sprites/block.png")
@@ -188,8 +211,30 @@ def loadLevel():
             linesPlaced = linesPlaced + 1
     levelFile.close()
 
+#bugi ono (buggy ohno)
 
+def getLights():
+    lights = []
+    if(len(pbX) > 0):
+        for i in range(len(pbX)):
+            lights.append(Vec2(pbX[i], pbY[i]))
+    return lights
+
+def drawShadows(a):
+    b = Vec2(a.x+16, a.y+16)
+    a = b
+    lights = getLights()
+    if(len(lights) <= 0):
+        dis.blit(shadowSprite, (a.x, a.y))
+    else:
+        for i in lights:
+            angle = shadow(a, i)
+            shadowScale = pygame.transform.scale(shadowSprite, (int(32 + dst(a, i)/8), 32))
+            shadowRot = pygame.transform.rotate(shadowScale, angle+90)
+            dis.blit(shadowRot, (a.x, a.y))
+        
 def drawPlayer(x, y):
+    drawShadows(Vec2(x, y))
     if playerFacing == 0:
         dis.blit(playerSprite, (x, y))
     elif playerFacing == 1:
@@ -198,6 +243,7 @@ def drawPlayer(x, y):
         dis.blit(playerBackSprite, (x, y))
     elif playerFacing == 3:
         dis.blit(playerRightSprite, (x, y))
+    
 
 def drawAllBlocks(): #draws blocks and pushblocks
     dis.blit(wallsSprite, (0, 0))
