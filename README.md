@@ -1,23 +1,26 @@
 # Sector
-A simple puzzle game made in pygame. Don't roast me for terrible code, this is my first time making a thing like this. Right now it's very broken and has almost no levels.
+A simple puzzle game made in pygame. Don't roast me for terrible code, this is my first time making a thing like this.
 Trello: https://trello.com/b/ZUbwRU2V/sector
-Uh... that's it.
 
 Some stuff if you wanna contribute:
 
 ## Tiles:
-  
+
+
+
 +  `00` is floor
   
-+  `01` is wall
++  `01` is block (wall)
   
-+  `02` is block (pushable)
++  `02` is pushblock (pushable block)
   
 +  `03` is player
   
 +  `04` is hole
   
 +  `05` is exit
+
++  `06` is horizontal rails
   
   
   
@@ -58,3 +61,9 @@ Some stuff if you wanna contribute:
   ```
   python levelEditor.py
   ```
+
+
+
+# Level editor:
+
+At the moment, level editor loads the file specified in code (so you can't load any other level without editing the code), and saves the file as "customLevel" + number of levels existing + 1 + the file extension (`.srlv`) so it won't overwrite an existing level file. To save the level press `s`, to change selected tile use mouse scroll wheel. Hopefully i will make it more user-friendly soon.
