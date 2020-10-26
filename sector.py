@@ -1,30 +1,11 @@
 import pygame, sys, os, math, random
 from collections import namedtuple
 
-Vec2 = namedtuple('Vec2', 'x y')
-
-radDeg = 180 / math.pi
-
-# Vec2's
-def angleTo(a, b):
-    ang = math.atan2(b.x - a.x, b.y - a.y) * radDeg
-    if(ang < 0): ang += 360
-    return ang
-
-def dst(a, b):
-    x_d = b.x - a.x
-    y_d = b.y - a.y
-    return math.sqrt(x_d ** 2 + y_d ** 2)
-
-def shadow(a, b):
-    return round(angleTo(a, b), 2)
-
-
-# example: angle = shadow(a, b)
-
-
 #Sector by Txar
 #big thanks to Xelo and ThePythonGuy3 as they helped me with some of the code <3
+
+Vec2 = namedtuple('Vec2', 'x y')
+radDeg = 180 / math.pi
 devMode = False
 width = 800
 height = 576
@@ -49,8 +30,9 @@ rightArrowSprite = pygame.image.load("sprites/arrowRight.png")
 leftArrowSprite = pygame.image.load("sprites/arrowLeft.png")
 tilesSprites = pygame.image.load("sprites/tiles.png")
 railSprite = pygame.image.load("sprites/rail.png")
-wallsSprite = pygame.Surface((width, height))
-
+lampSprite = pygame.image.load("sprites/lamp.png")
+wallsSprite = pygame.Surface((width, height), pygame.SRCALPHA)
+floorSprite = pygame.Surface((width, height))
 true = True #this made me laugh so hard that i will just leave it here
 playerFacing = 0
 x = 400 #player x
@@ -69,6 +51,8 @@ hX = [] #holes x
 hY = [] #holes y
 hrX = [] #horizontal rails x
 hrY = [] #horizontal rails y
+lX = [] #lamps x
+lY = [] #lamps y
 
 restartButton = [768, 0] #restart button coordinates
 playButton = [304, 256] #play button coordinates
@@ -96,20 +80,16 @@ while True:
         break
     lC = lC + 1
 
-def generateWalls():
-    if levelsLoaded >= int(levelsCompleted[0]) + 2 or levelsLoaded >= existingLevels:
-        return
-    global wallsSprite, bX, bY, wholeLevel
+def generateFloor():
     columnPixel = -32
     rowPixel = -32
     for rD in range(0, 18):
         for cD in range(0, 25):
             variant = random.randint(0, 7)
-            wallsSprite.blit(tilesSprites, (columnPixel + 32, rowPixel + 32), (0, variant * 32, 32, variant * 32 + 32)) 
+            floorSprite.blit(tilesSprites, (columnPixel + 32, rowPixel + 32), (0, variant * 32, 32, variant * 32 + 32)) 
             columnPixel = columnPixel + 32
         columnPixel = -32
         rowPixel = rowPixel + 32
-
     for rD in range(0, 18):
         for cD in range(0, 25):
             mask = 0
@@ -122,9 +102,14 @@ def generateWalls():
                 if cD - 1 < 25:
                     if wholeLevel[rD][cD - 1] == "06":
                         mask = mask + 2
-                wallsSprite.blit(railSprite, (x, y), (mask * 32, 0, 32, 32))
+                floorSprite.blit(railSprite, (x, y), (mask * 32, 0, 32, 32))
 
-
+def generateWalls():
+    if levelsLoaded >= int(levelsCompleted[0]) + 2 or levelsLoaded >= existingLevels:
+        return
+    generateFloor()
+    global wallsSprite, bX, bY, wholeLevel
+    wallsSprite.fill((0, 0, 0, 0))
     for columnsGenerated in range(0, 25):
         for rowsGenerated in range(0, 18):
             mask = 0
@@ -151,7 +136,7 @@ def saveProgress():
     progressData.close()
 
 def loadLevel():
-    global levelsLoaded, x, y, pbX, pbY, bX, bY, hX, hY, hrX, hrY, existingLevels, gameMode, levelsCompleted, wholeLevel
+    global levelsLoaded, x, y, pbX, pbY, bX, bY, hX, hY, hrX, hrY, lX, lY, existingLevels, gameMode, levelsCompleted, wholeLevel
     wholeLevel = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
     pbX = [] #pushblocks x
     pbY = [] #pushblocks y
@@ -161,6 +146,8 @@ def loadLevel():
     hY = [] #holes y
     hrX = [] #horizontal rails x
     hrY = [] #horizontal rails y
+    lX = []
+    lY = []
     #pygame.mixer.music.play()
     if levelsLoaded >= int(levelsCompleted[0]) + 2 or levelsLoaded >= existingLevels:
         gameMode = 0
@@ -208,17 +195,35 @@ def loadLevel():
                     hrX.append(blocksPlaced*32)
                     hrY.append(linesPlaced*32)
 
+                elif levelBlocksLines[blocksPlaced] == "08":
+                    lX.append(blocksPlaced*32)
+                    lY.append(linesPlaced*32)
+
                 blocksPlaced = blocksPlaced + 1
             linesPlaced = linesPlaced + 1
     levelFile.close()
 
-#bugi ono (buggy ohno)
+# Vec2's
+def angleTo(a, b):
+    ang = math.atan2(b.x - a.x, b.y - a.y) * radDeg
+    if(ang < 0): ang += 360
+    return ang
 
+def dst(a, b):
+    x_d = b.x - a.x
+    y_d = b.y - a.y
+    return math.sqrt(x_d ** 2 + y_d ** 2)
+
+def shadow(a, b):
+    return round(angleTo(a, b), 2)
+# example: angle = shadow(a, b)
+
+#bugi ono (buggy ohno)
 def getLights():
     lights = []
-    if(len(pbX) > 0):
+    if(len(lX) > 0):
         for i in range(len(pbX)):
-            lights.append(Vec2(pbX[i], pbY[i]))
+            lights.append(Vec2(lX[i], lY[i]))
     return lights
 
 def drawShadows(a):
@@ -230,14 +235,13 @@ def drawShadows(a):
     else:
         for i in lights:
             angle = shadow(a, i)
-            shadow_rect = shadowSprite.get_rect(center = (a.x, a.y))
+            shadow_rect = shadowSprite.get_rect(center = (a.x, a.y + 10))
             shadowScale = pygame.transform.scale(shadowSprite, (int(128 - max(0, min(dst(a, i), 64))/2), 32))
             shadowRot = pygame.transform.rotozoom(shadowScale, angle+90, 1)
-            shadowDraw = shadowRot.get_rect(center = (a.x, a.y))
+            shadowDraw = shadowRot.get_rect(center = (a.x, a.y + 10))
             dis.blit(shadowRot, shadowDraw)
         
 def drawPlayer(x, y):
-    drawShadows(Vec2(x, y))
     if playerFacing == 0:
         dis.blit(playerSprite, (x, y))
     elif playerFacing == 1:
@@ -249,15 +253,16 @@ def drawPlayer(x, y):
     
 
 def drawAllBlocks(): #draws blocks and pushblocks
+    dis.blit(floorSprite, (0, 0))
+    if len(getLights()) > 0:
+        drawShadows(Vec2(x, y))
     dis.blit(wallsSprite, (0, 0))
-    hD = 0 #holes drawn
-    while hD != len(hX):
+    for hD in range(0, len(hX)):
         dis.blit(holeSprite, (hX[hD], hY[hD]))
-        hD = hD + 1
-    pD = 0 #pushblocks drawn
-    while pD != len(pbX):
+    for pD in range(0, len(pbX)):
         dis.blit(pushblockSprite, (pbX[pD], pbY[pD]))
-        pD = pD + 1
+    for lD in range(0, len(lX)):
+        dis.blit(lampSprite, (lX[lD], lY[lD]))
 
 def movePushblocks(): #moves pushblocks (how unexpected, huh?)
     pM = 0 #pushblocks moved
