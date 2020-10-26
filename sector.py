@@ -31,9 +31,11 @@ leftArrowSprite = pygame.image.load("sprites/arrowLeft.png")
 tilesSprites = pygame.image.load("sprites/tiles.png")
 railSprite = pygame.image.load("sprites/rail.png")
 lampSprite = pygame.image.load("sprites/lamp.png")
+lightLevelsSprite = pygame.image.load("sprites/lightLevels.png")
 wallsSprite = pygame.Surface((width, height), pygame.SRCALPHA)
 floorSprite = pygame.Surface((width, height))
-true = True #this made me laugh so hard that i will just leave it here
+lightSprite = pygame.Surface((width, height), pygame.SRCALPHA)
+true = True #this made me laugh solampSprite = pygame.image.load("sprites/lamp.png") hard that i will just leave it here
 playerFacing = 0
 x = 400 #player x
 y = 300 #player y
@@ -79,6 +81,106 @@ while True:
         existingLevels = lC
         break
     lC = lC + 1
+
+def generateLightMap():
+    global wholeLevel
+    lightSprite.fill((0, 0, 0, 0))
+    b = False
+    lightLevel = 0 #0 is the least dark, 5 is the darkest
+    for rows in range(0, 18):
+        for columns in range(0, 25): 
+            distance = 0
+            lightLevel = 0
+            x = columns * 32
+            y = rows * 32
+            while True:
+                if len(getLights()) == 0:
+                    lightLevel = 6
+                    break
+                if b == True:
+                    b = False
+                    break
+                if distance > 5:
+                    lightLevel = 5
+                    break
+                if wholeLevel[rows][columns] == "08":
+                    lightLevel = 0
+                    break
+                if columns + distance > 24 and rows + distance > 17:
+                    lightLevel = 5
+                    break
+                if columns + distance < 25:
+                    if wholeLevel[rows][columns + distance] == "08":
+                        lightLevel = distance
+                        break
+                if columns + distance < 25 and rows + distance < 18:
+                    if wholeLevel[rows + distance][columns + distance] == "08": #i dont care if this is stupid and disgusting, it works, maybe i will fix it later
+                        lightLevel = distance
+                        break
+                if columns - distance >= 0 and rows - distance >= 0:
+                    if wholeLevel[rows - distance][columns - distance] == "08":
+                        lightLevel = distance
+                        break
+                if columns + distance < 25 and rows - distance >= 0:
+                    if wholeLevel[rows - distance][columns + distance] == "08":
+                        lightLevel = distance
+                        break
+                if columns - distance >= 0 and rows + distance < 18:
+                    if wholeLevel[rows + distance][columns - distance] == "08":
+                        lightLevel = distance
+                        break
+                if columns - distance >= 0:
+                    if wholeLevel[rows][columns - distance] == "08":
+                        lightLevel = distance
+                        break
+                if rows + distance < 18:
+                    if wholeLevel[rows + distance][columns] == "08":
+                        lightLevel = distance
+                        break
+                if rows - distance >= 0:
+                    if wholeLevel[rows - distance][columns] == "08":
+                        lightLevel = distance
+                        break
+                distance2 = 0
+                while True:
+                    if distance2 > 4:
+                        break
+                    if columns - distance >= 0 and rows + distance2 < 18:
+                        if wholeLevel[rows + distance2][columns - distance] == "08":
+                            if distance > distance2:
+                                lightLevel = distance
+                            else:
+                                lightLevel = distance2
+                            b = True
+                            break
+                    if columns + distance < 25 and rows - distance2 >= 0:
+                        if wholeLevel[rows - distance2][columns + distance] == "08":
+                            if distance > distance2:
+                                lightLevel = distance
+                            else:
+                                lightLevel = distance2
+                            b = True
+                            break
+                    if columns + distance2 < 25 and rows + distance < 18:
+                        if wholeLevel[rows + distance][columns + distance2] == "08":
+                            if distance > distance2:
+                                lightLevel = distance
+                            else:
+                                lightLevel = distance2
+                            b = True
+                            break
+                    if columns - distance2 >= 0 and rows - distance >= 0:
+                        if wholeLevel[rows - distance][columns - distance2] == "08":
+                            if distance > distance2:
+                                lightLevel = distance
+                            else:
+                                lightLevel = distance2
+                            b = True
+                            break
+                    distance2 = distance2 + 1
+                distance = distance + 1
+            lightSprite.blit(lightLevelsSprite, (x, y), (lightLevel * 32, 0, 32, 32))
+
 
 def generateFloor():
     columnPixel = -32
@@ -198,10 +300,13 @@ def loadLevel():
                 elif levelBlocksLines[blocksPlaced] == "08":
                     lX.append(blocksPlaced*32)
                     lY.append(linesPlaced*32)
+                    bX.append(blocksPlaced*32)
+                    bY.append(linesPlaced*32)
 
                 blocksPlaced = blocksPlaced + 1
             linesPlaced = linesPlaced + 1
     levelFile.close()
+    generateLightMap()
 
 # Vec2's
 def angleTo(a, b):
@@ -222,7 +327,7 @@ def shadow(a, b):
 def getLights():
     lights = []
     if(len(lX) > 0):
-        for i in range(len(pbX)):
+        for i in range(len(lX)):
             lights.append(Vec2(lX[i], lY[i]))
     return lights
 
@@ -254,8 +359,8 @@ def drawPlayer(x, y):
 
 def drawAllBlocks(): #draws blocks and pushblocks
     dis.blit(floorSprite, (0, 0))
-    if len(getLights()) > 0:
-        drawShadows(Vec2(x, y))
+    #if len(getLights()) > 0:
+    #    drawShadows(Vec2(x, y))
     dis.blit(wallsSprite, (0, 0))
     for hD in range(0, len(hX)):
         dis.blit(holeSprite, (hX[hD], hY[hD]))
@@ -600,6 +705,7 @@ while not gameOver:
         checkMouseButtons()
     if devMode: #i find these 2 lines so funny
         cheat()
+    dis.blit(lightSprite, (0, 0))
     drawUi()
     pygame.display.update()
     clock.tick(30)

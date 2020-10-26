@@ -9,7 +9,7 @@ LEFT = 1
 RIGHT = 3
 SCROLLDOWN = 4
 SCROLLUP = 5
-existingBlocksAmount = 6
+existingBlocksAmount = 8
 selectedBlock = 0
 useBlock = 0
 save = False
@@ -32,6 +32,7 @@ sectorIcon = pygame.image.load("sprites/icon.png")
 tileOutline = pygame.image.load("sprites/tileOutline.png")
 horizontalRailsSprite = pygame.image.load("sprites/horizontalRails.png")
 exitSprite = pygame.image.load("sprites/exit.png")
+lampSprite = pygame.image.load("sprites/lamp.png")
 
 def loadLevelFile(levelName):
 	global lastUsedLevel, wholeLevel
@@ -66,6 +67,8 @@ def drawLevel():
 				dis.blit(horizontalRailsSprite, (int(x), int(y)))
 			if wholeLevel[rowsDrawn][columnsDrawn] == "05":
 				dis.blit(exitSprite, (int(x), int(y)))
+			if wholeLevel[rowsDrawn][columnsDrawn] == "08":
+				dis.blit(lampSprite, (int(x), int(y)))
 
 def roundTo32(x, base = 32):
     return int(base * math.ceil(float(x) / base) - 32)
@@ -102,6 +105,8 @@ def changeSelectedBlock():
 		useBlock = "05"
 	elif selectedBlock == 6:
 		useBlock = "06"
+	elif selectedBlock == 8:
+		useBlock = "08"
 
 def openLevelWindow():
 	global saveQuestion
@@ -125,6 +130,8 @@ def drawUi():
 		dis.blit(horizontalRailsSprite, (32, 592))
 	if useBlock == "05":
 		dis.blit(exitSprite, (32, 592))
+	if useBlock == "05":
+		dis.blit(lampSprite, (32, 592))
 
 def saveLevel():
 	global lastUsedLevel, wholeLevel, saveLevelName, save
