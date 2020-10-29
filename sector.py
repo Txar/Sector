@@ -11,6 +11,7 @@ width = 800
 height = 576
 gameOver = False
 wholeLevel = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
+lightMap = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
 gameMode = 0 #0 is menu, 1 is level, 2 is level select
 playerSprite = pygame.image.load("sprites/player.png")
 playerRightSprite = pygame.image.load("sprites/playerRight.png")
@@ -82,105 +83,75 @@ while True:
         break
     lC = lC + 1
 
-def generateLightMap():
-    global wholeLevel
+def generateLightMap(lightSprite, wholeLevel): #this is mostly made by Xelo
+    lightMap = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
+    neighbours = []
     lightSprite.fill((0, 0, 0, 0))
     b = False
-    lightLevel = 0 #0 is the least dark, 5 is the darkest
     for rows in range(0, 18):
         for columns in range(0, 25): 
-            distance = 0
-            lightLevel = 0
-            x = columns * 32
-            y = rows * 32
-            while True:
-                if len(getLights()) == 0:
-                    lightLevel = 6
-                    break
-                if b == True:
-                    b = False
-                    break
-                if distance > 5:
-                    lightLevel = 5
-                    break
-                if wholeLevel[rows][columns] == "08":
-                    lightLevel = 0
-                    break
-                if columns + distance > 24 and rows + distance > 17:
-                    lightLevel = 5
-                    break
-                if columns + distance < 25:
-                    if wholeLevel[rows][columns + distance] == "08":
-                        lightLevel = distance
+            mindarkfound = 5
+            for lookx in range(-4, 4):
+                for looky in range(-4, 4):
+                    if mindarkfound == 0:
+                    #we found the brightest it can be, 
+                    # don look for more
                         break
-                if columns + distance < 25 and rows + distance < 18:
-                    if wholeLevel[rows + distance][columns + distance] == "08": #i dont care if this is stupid and disgusting, it works, maybe i will fix it later
-                        lightLevel = distance
-                        break
-                if columns - distance >= 0 and rows - distance >= 0:
-                    if wholeLevel[rows - distance][columns - distance] == "08":
-                        lightLevel = distance
-                        break
-                if columns + distance < 25 and rows - distance >= 0:
-                    if wholeLevel[rows - distance][columns + distance] == "08":
-                        lightLevel = distance
-                        break
-                if columns - distance >= 0 and rows + distance < 18:
-                    if wholeLevel[rows + distance][columns - distance] == "08":
-                        lightLevel = distance
-                        break
-                if columns - distance >= 0:
-                    if wholeLevel[rows][columns - distance] == "08":
-                        lightLevel = distance
-                        break
-                if rows + distance < 18:
-                    if wholeLevel[rows + distance][columns] == "08":
-                        lightLevel = distance
-                        break
-                if rows - distance >= 0:
-                    if wholeLevel[rows - distance][columns] == "08":
-                        lightLevel = distance
-                        break
-                distance2 = 0
-                while True:
-                    if distance2 > 4:
-                        break
-                    if columns - distance >= 0 and rows + distance2 < 18:
-                        if wholeLevel[rows + distance2][columns - distance] == "08":
-                            if distance > distance2:
-                                lightLevel = distance
-                            else:
-                                lightLevel = distance2
-                            b = True
-                            break
-                    if columns + distance < 25 and rows - distance2 >= 0:
-                        if wholeLevel[rows - distance2][columns + distance] == "08":
-                            if distance > distance2:
-                                lightLevel = distance
-                            else:
-                                lightLevel = distance2
-                            b = True
-                            break
-                    if columns + distance2 < 25 and rows + distance < 18:
-                        if wholeLevel[rows + distance][columns + distance2] == "08":
-                            if distance > distance2:
-                                lightLevel = distance
-                            else:
-                                lightLevel = distance2
-                            b = True
-                            break
-                    if columns - distance2 >= 0 and rows - distance >= 0:
-                        if wholeLevel[rows - distance][columns - distance2] == "08":
-                            if distance > distance2:
-                                lightLevel = distance
-                            else:
-                                lightLevel = distance2
-                            b = True
-                            break
-                    distance2 = distance2 + 1
-                distance = distance + 1
-            lightSprite.blit(lightLevelsSprite, (x, y), (lightLevel * 32, 0, 32, 32))
-
+                    searchx = columns + lookx
+                    searchy = rows + looky
+                    if searchx > 24 or searchx < 0 or searchy > 17 or searchy < 0:
+                        #dont look outside the level -> skip
+                        continue
+                    if  wholeLevel[searchy][searchx] != "08":
+                        #its not a light -> skip
+                        continue
+                    #known as the chebeshev distance
+                    distance = abs(lookx) + abs(looky)
+                    dist = math.sqrt(lookx*lookx+looky*looky)
+                    if dist == 0:
+                        mindarkfound = min(mindarkfound, distance)
+                        continue
+                    ablx = lookx/dist
+                    ably = looky/dist 
+                    mag = 0
+                    pscanx = columns
+                    pscany = rows
+                    while mag<dist:
+                        scanx = math.floor(ablx*mag+columns)
+                        scany = math.floor(ably*mag+rows)
+                        if scanx != pscanx or scanx != pscany:
+                            if wholeLevel[scany][scanx]== "01":
+                                distance+=1
+                        pscanx = scanx 
+                        pscany = scany
+                        mag += 0.2
+                    mindarkfound = min(mindarkfound, distance)
+            lightMap[rows].append(mindarkfound)
+    for rows in range(0, 18):
+        for columns in range(0, 25):
+            if not wholeLevel[rows][columns] == "01":
+                continue
+            neighbours = []
+            for looky in range(-1, 2):
+                for lookx in range(-1, 2):
+                    if lookx == 0 and looky == 0:
+                        continue
+                    searchy = rows + looky
+                    searchx = columns + lookx
+                    if searchy > 17 or searchx > 24 or searchy < 0 or searchx < 0:
+                        continue
+                    if wholeLevel[searchy][searchx] == "01":
+                        continue
+                    neighbours.append(lightMap[searchy][searchx])
+            if len(neighbours) > 0:
+                lightMap[rows][columns] = min(neighbours)
+            else:
+                lightMap[rows][columns] = 5
+    for rows in range(0, 18):
+        for columns in range(0, 25):
+            if wholeLevel[rows][columns] == "08":
+                continue
+            lightSprite.blit(lightLevelsSprite, (columns*32, rows*32), (lightMap[rows][columns]*32, 0, 32, 32))
 
 def generateFloor():
     columnPixel = -32
@@ -306,7 +277,7 @@ def loadLevel():
                 blocksPlaced = blocksPlaced + 1
             linesPlaced = linesPlaced + 1
     levelFile.close()
-    generateLightMap()
+    generateLightMap(lightSprite, wholeLevel)
 
 # Vec2's
 def angleTo(a, b):
