@@ -57,7 +57,7 @@ hrY = [] #horizontal rails y
 lX = [] #lamps x
 lY = [] #lamps y
 
-restartButton = [768, 0] #restart button coordinates
+restartButton = [736, 0] #restart button coordinates
 playButton = [304, 256] #play button coordinates
 editorButton = [368, 256] #level editor coordinates
 exitButton = [432, 256] #exit button coordinates
@@ -557,7 +557,8 @@ def checkMouseButtons():
         if mousePos[0] < restartButton[0] + 32 and mousePos[0] > restartButton[0] and mousePos[1] > restartButton[1] and mousePos[1] < restartButton[1] + 32:
             loadLevel()
             generateWalls()
-
+        if mousePos[0] < exitButton[0] + 32 and mousePos[0] > exitButton[0] and mousePos[1] > exitButton[1] and mousePos[1] < exitButton[1] + 32:
+            gameMode = 0
     elif gameMode == 0:
         if mousePos[0] < playButton[0] + 32 and mousePos[0] > playButton[0] and mousePos[1] > playButton[1] and mousePos[1] < playButton[1] + 32:
             if levelsLoaded >= int(levelsCompleted[0]) + 2 or levelsLoaded >= existingLevels:
@@ -594,6 +595,7 @@ def drawUi():
     global gameMode, playButton, exitButton
     if gameMode == 1:
         dis.blit(restartButtonSprite, (restartButton[0], restartButton[1]))
+        dis.blit(exitButtonSprite, (exitButton[0], exitButton[1]))
     if gameMode == 0:
         playButton = [304, 256]
         exitButton = [432, 256]
@@ -615,7 +617,6 @@ clock = pygame.time.Clock()
 pygame.mixer.music.load("sounds/theme1.mp3")
 pygame.display.set_icon(sectorIcon)
 pushblockSound = pygame.mixer.Sound("sounds/pbs.wav")
-
 while not gameOver:
     summonBox, summonWall, destroyWall = False, False, False
     mouseKeyPressed = False
@@ -648,6 +649,8 @@ while not gameOver:
                 downG = False
             if event.key == pygame.K_d:
                 rightG = False
+            if event.key == pygame.K_h:
+                pygame.image.save(dis, "screenshot.png")
         if event.type == pygame.QUIT:
             gameOver = True
         if event.type == pygame.MOUSEBUTTONDOWN:
