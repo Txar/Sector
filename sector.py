@@ -2,7 +2,15 @@ import pygame, sys, os, math, random
 from collections import namedtuple
 
 #Sector by Txar
-#big thanks to Xelo and ThePythonGuy3 as they helped me with some of the code <3
+#big thanks to Xeloboyo and ThePythonGuy3 as they helped me with some of the code <3
+
+firstTime = False
+if not os.path.exists("data/progress.srgd"):
+    firstTime = True
+    progressData = open("data/progress.srgd", "w")
+    progressData.writelines("0")
+    progressData.close()
+
 
 Vec2 = namedtuple('Vec2', 'x y')
 radDeg = 180 / math.pi
@@ -36,7 +44,7 @@ lightLevelsSprite = pygame.image.load("sprites/lightLevels.png")
 wallsSprite = pygame.Surface((width, height), pygame.SRCALPHA)
 floorSprite = pygame.Surface((width, height))
 lightSprite = pygame.Surface((width, height), pygame.SRCALPHA)
-true = True #this made me laugh solampSprite = pygame.image.load("sprites/lamp.png") hard that i will just leave it here
+true = True #this made me laugh so hard that i will just leave it here
 playerFacing = 0
 x = 400 #player x
 y = 300 #player y
