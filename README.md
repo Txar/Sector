@@ -49,7 +49,7 @@ Some stuff if you wanna contribute:
 3. Install dependencies
 
   ```
-  pip install -r requrements.txt
+  pip install -r requirements.txt
   ```
 
 4. Run game or level editor
