@@ -622,9 +622,7 @@ pygame.init()
 dis = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Sector")
 clock = pygame.time.Clock()
-pygame.mixer.music.load("sounds/theme1.mp3")
 pygame.display.set_icon(sectorIcon)
-pushblockSound = pygame.mixer.Sound("sounds/pbs.wav")
 while not gameOver:
     summonBox, summonWall, destroyWall = False, False, False
     mouseKeyPressed = False
