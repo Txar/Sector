@@ -130,7 +130,7 @@ def drawUi():
 		dis.blit(horizontalRailsSprite, (32, 592))
 	if useBlock == "05":
 		dis.blit(exitSprite, (32, 592))
-	if useBlock == "05":
+	if useBlock == "08":
 		dis.blit(lampSprite, (32, 592))
 
 def saveLevel():
