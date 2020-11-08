@@ -11,7 +11,7 @@ if not os.path.exists("data/progress.srgd"):
     progressData.writelines("0")
     progressData.close()
 
-
+bgx = 0 #background x
 Vec2 = namedtuple('Vec2', 'x y')
 radDeg = 180 / math.pi
 devMode = False
@@ -21,6 +21,7 @@ gameOver = False
 wholeLevel = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
 lightMap = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
 gameMode = 0 #0 is menu, 1 is level, 2 is level select
+sectorTitleSprite = pygame.image.load("sprites/sectorTitle.png")
 playerSprite = pygame.image.load("sprites/player.png")
 playerRightSprite = pygame.image.load("sprites/playerRight.png")
 playerLeftSprite = pygame.image.load("sprites/playerLeft.png")
@@ -43,9 +44,12 @@ lampSprite = pygame.image.load("sprites/lamp.png")
 lightLevelsSprite = pygame.image.load("sprites/lightLevels.png")
 wallsSprite = pygame.Surface((width, height), pygame.SRCALPHA)
 floorSprite = pygame.Surface((width, height))
+dis = pygame.Surface((width, height))
 lightSprite = pygame.Surface((width, height), pygame.SRCALPHA)
+menuBackground = pygame.Surface((width*5, height))
 true = True #this made me laugh so hard that i will just leave it here
 playerFacing = 0
+backGroundPos = 0
 x = 400 #player x
 y = 300 #player y
 upG = False #up go (for player)
@@ -65,10 +69,11 @@ hrY = [] #horizontal rails y
 lX = [] #lamps x
 lY = [] #lamps y
 
+sectorTitle = [232, 128] #menu title coordinates
 restartButton = [736, 0] #restart button coordinates
-playButton = [304, 256] #play button coordinates
-editorButton = [368, 256] #level editor coordinates
-exitButton = [432, 256] #exit button coordinates
+playButton = [320, 256] #play button coordinates
+editorButton = [384, 256] #level editor coordinates
+exitButton = [448, 256] #exit button coordinates
 rightButton = [768, 256] #right arrow button coordinates
 leftButton = [0, 256] #left arrow button coordinates  
 
@@ -99,8 +104,8 @@ def generateLightMap(lightSprite, wholeLevel): #this is mostly made by Xelo
     for rows in range(0, 18):
         for columns in range(0, 25): 
             mindarkfound = 5
-            for lookx in range(-4, 4):
-                for looky in range(-4, 4):
+            for lookx in range(-8, 9):
+                for looky in range(-8, 9):
                     if mindarkfound == 0:
                     #we found the brightest it can be, 
                     # don look for more
@@ -286,6 +291,21 @@ def loadLevel():
             linesPlaced = linesPlaced + 1
     levelFile.close()
     generateLightMap(lightSprite, wholeLevel)
+    generateBackground()
+
+def generateBackground():
+    menuBackground.blit(floorSprite, (0, 0))
+    #if len(getLights()) > 0:
+    #    drawShadows(Vec2(x, y))
+    menuBackground.blit(wallsSprite, (0, 0))
+    for hD in range(0, len(hX)):
+        menuBackground.blit(holeSprite, (hX[hD], hY[hD]))
+    for pD in range(0, len(pbX)):
+        menuBackground.blit(pushblockSprite, (pbX[pD], pbY[pD]))
+    for lD in range(0, len(lX)):
+        menuBackground.blit(lampSprite, (lX[lD], lY[lD]))
+    menuBackground.blit(lightSprite, (0, 0))
+    menuBackground.blit(blurSurf(menuBackground, 5), (0, 0))
 
 # Vec2's
 def angleTo(a, b):
@@ -453,6 +473,20 @@ def movePushblocks(): #moves pushblocks (how unexpected, huh?)
 def roundTo32(x, base = 32):
     return int(base * math.ceil(float(x) / base) - 32)
 
+def blurSurf(surface, amt):
+    """
+    Blur the given surface by the given 'amount'.  Only values 1 and greater
+    are valid.  Value 1 = no blur.
+    """
+    if amt < 1.0:
+        raise ValueError("Arg 'amt' must be greater than 1.0, passed in value is %s"%amt)
+    scale = 1.0/float(amt)
+    surf_size = surface.get_size()
+    scale_size = (int(surf_size[0]*scale), int(surf_size[1]*scale))
+    surf = pygame.transform.smoothscale(surface, scale_size)
+    surf = pygame.transform.smoothscale(surf, surf_size)
+    return surf
+
 def cheat():
     if summonBox:
         if playerFacing == 0:
@@ -559,8 +593,11 @@ def checkPlayerCollisions(): #this checks for blocks collisions with player
                 DdownG = True
 
 def checkMouseButtons():
-    global levelsLoaded, gameMode, levelsCompleted, levelsLoaded, mouseKeyPressed, existingLevels
-    mousePos = pygame.mouse.get_pos()
+    global levelsLoaded, gameMode, levelsCompleted, levelsLoaded, mouseKeyPressed, existingLevels, bgx
+    mousePos = list(pygame.mouse.get_pos())
+    mousePos[0] = math.floor(mousePos[0]/scaling)
+    mousePos[1] = math.floor(mousePos[1]/scaling)
+    print(mousePos)
     if gameMode == 1:
         if mousePos[0] < restartButton[0] + 32 and mousePos[0] > restartButton[0] and mousePos[1] > restartButton[1] and mousePos[1] < restartButton[1] + 32:
             loadLevel()
@@ -598,6 +635,7 @@ def checkMouseButtons():
             gameMode = 1
         if mousePos[0] < exitButton[0] + 32 and mousePos[0] > exitButton[0] and mousePos[1] > exitButton[1] and mousePos[1] < exitButton[1] + 32:
             gameMode = 0
+            bgx = 0
 
 def drawUi():
     global gameMode, playButton, exitButton
@@ -605,11 +643,16 @@ def drawUi():
         dis.blit(restartButtonSprite, (restartButton[0], restartButton[1]))
         dis.blit(exitButtonSprite, (exitButton[0], exitButton[1]))
     if gameMode == 0:
-        playButton = [304, 256]
-        exitButton = [432, 256]
+        for cd in range(0, 25):
+            for rd in range(0,18):
+                dis.blit(floorSprite, (cd*32, rd*32))
+        dis.blit(menuBackground, (bgx, 0))
+        playButton = [320, 256]
+        exitButton = [448, 256]
         dis.blit(playButtonSprite, (playButton[0], playButton[1]))
         dis.blit(editorButtonSprite, (editorButton[0], editorButton[1]))
         dis.blit(exitButtonSprite, (exitButton[0], exitButton[1]))
+        dis.blit(sectorTitleSprite, (sectorTitle[0], sectorTitle[1]))
     if gameMode == 2:
         playButton = [704, 0]
         exitButton = [768, 0]
@@ -617,13 +660,16 @@ def drawUi():
         dis.blit(exitButtonSprite, (exitButton[0], exitButton[1]))
         dis.blit(rightArrowSprite, (rightButton[0], rightButton[1]))
         dis.blit(leftArrowSprite, (leftButton[0], leftButton[1]))
-
+loadLevel()
+generateWalls()
+generateBackground()
 pygame.init()
-dis = pygame.display.set_mode((width, height))
+display = pygame.display.set_mode((width, height), pygame.RESIZABLE)
 pygame.display.set_caption("Sector")
 clock = pygame.time.Clock()
 pygame.display.set_icon(sectorIcon)
 while not gameOver:
+    bgx = bgx + 0.2
     summonBox, summonWall, destroyWall = False, False, False
     mouseKeyPressed = False
     for event in pygame.event.get():
@@ -646,6 +692,8 @@ while not gameOver:
         if gameMode == 0:
             x = 0
             y = 0
+        w, h = pygame.display.get_surface().get_size()
+        scaling = min(w/width, h/height)
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_w:
                 upG = False
@@ -687,6 +735,7 @@ while not gameOver:
         cheat()
     dis.blit(lightSprite, (0, 0))
     drawUi()
+    display.blit(pygame.transform.scale(dis, (math.floor(width*scaling), math.floor(height*scaling))), (0, 0))
     pygame.display.update()
     clock.tick(30)
 
