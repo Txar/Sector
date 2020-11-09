@@ -3,7 +3,6 @@ from collections import namedtuple
 
 #Sector by Txar
 #big thanks to Xeloboyo and ThePythonGuy3 as they helped me with some of the code <3
-
 firstTime = False
 if not os.path.exists("data/progress.srgd"):
     firstTime = True
@@ -82,6 +81,7 @@ rightPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #list of pushblock
 leftPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #same goes for those 3
 upPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #btw, pushblocks limit is 15 for a level because im stupid
 downPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+lightMap = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
 DrightG, DleftG, DupG, DdownG = False, False, False, False #dont go right/left/up/down
 levelsLoaded = 1
 lC = 1 #levels checked
@@ -97,9 +97,9 @@ while True:
     lC = lC + 1
 
 def generateLightMap(lightSprite, wholeLevel): #this is mostly made by Xelo
+    global lightMap
     lightMap = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
     neighbours = []
-    lightSprite.fill((0, 0, 0, 0))
     b = False
     for rows in range(0, 18):
         for columns in range(0, 25): 
@@ -160,11 +160,19 @@ def generateLightMap(lightSprite, wholeLevel): #this is mostly made by Xelo
                 lightMap[rows][columns] = min(neighbours)
             else:
                 lightMap[rows][columns] = 5
+
+def drawLight():
+    lightSprite.fill((0, 0, 0, 0))
+    global wholeLevel, lightMap
     for rows in range(0, 18):
         for columns in range(0, 25):
             if wholeLevel[rows][columns] == "08":
                 continue
             lightSprite.blit(lightLevelsSprite, (columns*32, rows*32), (lightMap[rows][columns]*32, 0, 32, 32))
+
+def glowPlayer():
+    pygame.draw.rect(lightSprite, (0, 0, 0, 0), (roundTo32(x+16), roundTo32(y+16), 32, 32))
+    lightSprite.blit(lightLevelsSprite, (roundTo32(x+16), roundTo32(y+16)), (lightMap[int(roundTo32(y+16)/32)][int(roundTo32(x+16)/32)]*32-32, 0, 32, 32))
 
 def generateFloor():
     columnPixel = -32
@@ -172,7 +180,10 @@ def generateFloor():
     for rD in range(0, 18):
         for cD in range(0, 25):
             variant = random.randint(0, 7)
-            floorSprite.blit(tilesSprites, (columnPixel + 32, rowPixel + 32), (0, variant * 32, 32, variant * 32 + 32)) 
+            cfs = pygame.Surface((32, 32))
+            cfs.blit(tilesSprites, (0, 0), (0, variant * 32, 32, variant * 32 + 32))
+            rotation = random.randint(0, 360)
+            floorSprite.blit(pygame.transform.rotate(cfs, int(90 * math.ceil(float(rotation) / 90) - 90)), (columnPixel + 32, rowPixel + 32)) 
             columnPixel = columnPixel + 32
         columnPixel = -32
         rowPixel = rowPixel + 32
@@ -294,6 +305,7 @@ def loadLevel():
     generateBackground()
 
 def generateBackground():
+    global gbg #generating background
     menuBackground.blit(floorSprite, (0, 0))
     #if len(getLights()) > 0:
     #    drawShadows(Vec2(x, y))
@@ -520,7 +532,7 @@ def checkInteractiveBlocks():
     while hC != len(hY):
         pC = 0 #pushblocks checked
         while pC != len(pbY):
-            if pbX[pC] + 31 >= hX[hC] and pbX[pC] <= hX[hC] + 31 and pbY[pC] + 31 >= hY[hC] and pbY[pC] <= hY[hC] + 31:
+            if pbX[pC] + 26 >= hX[hC] and pbX[pC] <= hX[hC] + 26 and pbY[pC] + 26 >= hY[hC] and pbY[pC] <= hY[hC] + 26:
                 #drawFallingBlock(hX[hC], hY[hC]) 
                 pbX.pop(pC)
                 pbY.pop(pC)
@@ -587,17 +599,24 @@ def checkPlayerCollisions(): #this checks for blocks collisions with player
         hC = hC + 1
     for hrC in range(0, len(hrX)):
         if upG or downG:
-            if hrY[hrC] > y - 32 and hrY[hrC] < y and hrX[hrC] < x + 24 and hrX[hrC] > x - 24: 
+            d, u = False, False
+            if hrY[hrC] > y - 24 and hrY[hrC] < y and hrX[hrC] < x + 24 and hrX[hrC] > x - 24: 
                 DupG = True
-            elif hrY[hrC] < y + 32 and hrY[hrC] > y and hrX[hrC] < x + 24 and hrX[hrC] > x - 24: 
+                u = True
+            elif hrY[hrC] < y + 24 and hrY[hrC] > y and hrX[hrC] < x + 24 and hrX[hrC] > x - 24: 
                 DdownG = True
+                d = True
+            if x + 16 > hrX[hrC] - 4 and x + 16 < hrX[hrC] + 36 and y + 16 > hrY[hrC] - 4 and y + 16 < hrY[hrC] + 36:
+                if d:
+                    DdownG = False
+                if u:
+                    DupG = False
 
 def checkMouseButtons():
     global levelsLoaded, gameMode, levelsCompleted, levelsLoaded, mouseKeyPressed, existingLevels, bgx
     mousePos = list(pygame.mouse.get_pos())
     mousePos[0] = math.floor(mousePos[0]/scaling)
     mousePos[1] = math.floor(mousePos[1]/scaling)
-    print(mousePos)
     if gameMode == 1:
         if mousePos[0] < restartButton[0] + 32 and mousePos[0] > restartButton[0] and mousePos[1] > restartButton[1] and mousePos[1] < restartButton[1] + 32:
             loadLevel()
@@ -613,7 +632,7 @@ def checkMouseButtons():
             generateWalls()
         elif mousePos[0] < editorButton[0] + 32 and mousePos[0] > editorButton[0] and mousePos[1] > editorButton[1] and mousePos[1] < editorButton[1] + 32:
             pygame.quit()
-            os.system("python " + "levelEditor.py")
+            os.system("python levelEditor.py")
             sys.exit()
         elif mousePos[0] < exitButton[0] + 32 and mousePos[0] > exitButton[0] and mousePos[1] > exitButton[1] and mousePos[1] < exitButton[1] + 32:
             pygame.quit()
@@ -729,6 +748,11 @@ while not gameOver:
     movePushblocks()
     drawAllBlocks()
     drawPlayer(x, y)
+    if gameMode == 2:
+        drawLight()
+    if gameMode == 1:
+        drawLight()
+        glowPlayer()
     if mouseKeyPressed:
         checkMouseButtons()
     if devMode: #i find these 2 lines so funny
