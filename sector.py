@@ -10,6 +10,7 @@ if not os.path.exists("data/progress.srgd"):
     progressData.writelines("0")
     progressData.close()
 
+levelToLoad = "backgroundLevel"
 bgx = 0 #background x
 Vec2 = namedtuple('Vec2', 'x y')
 radDeg = 180 / math.pi
@@ -202,8 +203,10 @@ def generateFloor():
                 floorSprite.blit(railSprite, (x, y), (mask * 32, 0, 32, 32))
 
 def generateWalls():
+    global gameMode
     if levelsLoaded >= int(levelsCompleted[0]) + 2 or levelsLoaded >= existingLevels:
-        return
+        if gameMode != 0:
+            return
     generateFloor()
     global wallsSprite, bX, bY, wholeLevel
     wallsSprite.fill((0, 0, 0, 0))
@@ -233,7 +236,7 @@ def saveProgress():
     progressData.close()
 
 def loadLevel():
-    global levelsLoaded, x, y, pbX, pbY, bX, bY, hX, hY, hrX, hrY, lX, lY, existingLevels, gameMode, levelsCompleted, wholeLevel
+    global levelsLoaded, x, y, pbX, pbY, bX, bY, hX, hY, hrX, hrY, lX, lY, existingLevels, gameMode, levelsCompleted, wholeLevel, levelToLoad
     wholeLevel = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
     pbX = [] #pushblocks x
     pbY = [] #pushblocks y
@@ -247,9 +250,12 @@ def loadLevel():
     lY = []
     #pygame.mixer.music.play()
     if levelsLoaded >= int(levelsCompleted[0]) + 2 or levelsLoaded >= existingLevels:
-        gameMode = 0
-        return
+        if not gameMode == 0:
+            gameMode = 3
+            return
     filename = "levels/level" + str(levelsLoaded) + ".srlv"
+    if levelToLoad != "none":
+        filename = "levels/" + levelToLoad + ".srlv"
     levelFile = open(filename, "r")
     linesPlaced = 0
 
@@ -613,7 +619,7 @@ def checkPlayerCollisions(): #this checks for blocks collisions with player
                     DupG = False
 
 def checkMouseButtons():
-    global levelsLoaded, gameMode, levelsCompleted, levelsLoaded, mouseKeyPressed, existingLevels, bgx
+    global levelsLoaded, gameMode, levelsCompleted, levelsLoaded, mouseKeyPressed, existingLevels, bgx, levelToLoad, wholeLevel
     mousePos = list(pygame.mouse.get_pos())
     mousePos[0] = math.floor(mousePos[0]/scaling)
     mousePos[1] = math.floor(mousePos[1]/scaling)
@@ -622,12 +628,13 @@ def checkMouseButtons():
             loadLevel()
             generateWalls()
         if mousePos[0] < exitButton[0] + 32 and mousePos[0] > exitButton[0] and mousePos[1] > exitButton[1] and mousePos[1] < exitButton[1] + 32:
-            gameMode = 0
+            gameMode = 2
     elif gameMode == 0:
         if mousePos[0] < playButton[0] + 32 and mousePos[0] > playButton[0] and mousePos[1] > playButton[1] and mousePos[1] < playButton[1] + 32:
             if levelsLoaded >= int(levelsCompleted[0]) + 2 or levelsLoaded >= existingLevels:
                 levelsLoaded = levelsLoaded - 1
             gameMode = 2
+            levelToLoad = "none"
             loadLevel()
             generateWalls()
         elif mousePos[0] < editorButton[0] + 32 and mousePos[0] > editorButton[0] and mousePos[1] > editorButton[1] and mousePos[1] < editorButton[1] + 32:
@@ -653,6 +660,13 @@ def checkMouseButtons():
             generateWalls()
             gameMode = 1
         if mousePos[0] < exitButton[0] + 32 and mousePos[0] > exitButton[0] and mousePos[1] > exitButton[1] and mousePos[1] < exitButton[1] + 32:
+            levelToLoad = "backgroundLevel"
+            loadLevel()
+            generateWalls()
+            drawAllBlocks()
+            generateLightMap(lightSprite, wholeLevel)
+            drawLight()
+            generateBackground()
             gameMode = 0
             bgx = 0
 
@@ -662,9 +676,9 @@ def drawUi():
         dis.blit(restartButtonSprite, (restartButton[0], restartButton[1]))
         dis.blit(exitButtonSprite, (exitButton[0], exitButton[1]))
     if gameMode == 0:
-        for cd in range(0, 25):
-            for rd in range(0,18):
-                dis.blit(floorSprite, (cd*32, rd*32))
+        #for cd in range(0, 25):
+        #    for rd in range(0,18):
+        #        dis.blit(floorSprite, (cd*32, rd*32))
         dis.blit(menuBackground, (bgx, 0))
         playButton = [320, 256]
         exitButton = [448, 256]
@@ -679,16 +693,18 @@ def drawUi():
         dis.blit(exitButtonSprite, (exitButton[0], exitButton[1]))
         dis.blit(rightArrowSprite, (rightButton[0], rightButton[1]))
         dis.blit(leftArrowSprite, (leftButton[0], leftButton[1]))
-loadLevel()
-generateWalls()
-generateBackground()
 pygame.init()
 display = pygame.display.set_mode((width, height), pygame.RESIZABLE)
 pygame.display.set_caption("Sector")
 clock = pygame.time.Clock()
 pygame.display.set_icon(sectorIcon)
+loadLevel()
+generateWalls()
+drawAllBlocks()
+generateLightMap(lightSprite, wholeLevel)
+drawLight()
+generateBackground()
 while not gameOver:
-    bgx = bgx + 0.2
     summonBox, summonWall, destroyWall = False, False, False
     mouseKeyPressed = False
     for event in pygame.event.get():
@@ -757,6 +773,8 @@ while not gameOver:
         checkMouseButtons()
     if devMode: #i find these 2 lines so funny
         cheat()
+    if gameMode == 3:
+        gameMode = 0
     dis.blit(lightSprite, (0, 0))
     drawUi()
     display.blit(pygame.transform.scale(dis, (math.floor(width*scaling), math.floor(height*scaling))), (0, 0))
