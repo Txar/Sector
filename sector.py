@@ -3,13 +3,24 @@ from collections import namedtuple
 
 #Sector by Txar
 #big thanks to Xeloboyo and ThePythonGuy3 as they helped me with some of the code <3
+
+
+sys.stderr = open("log.txt", "r+")
+sys.stdout = sys.stderr
+command = ""
+console = ""
 firstTime = False
 if not os.path.exists("data/progress.srgd"):
     firstTime = True
     progressData = open("data/progress.srgd", "w")
     progressData.writelines("0")
     progressData.close()
-
+consoleOn = False
+pygame.font.init()
+consolas = pygame.font.SysFont("consolas", 23)
+consoleFont = pygame.font.SysFont("consolas", 16)
+fpsSettingTitle = consolas.render("FPS", False, (70, 185, 35))
+commandRender = consoleFont.render("> ", False, (255, 255, 255))
 levelToLoad = "backgroundLevel"
 bgx = 0 #background x
 Vec2 = namedtuple('Vec2', 'x y')
@@ -36,6 +47,11 @@ restartButtonSprite = pygame.image.load("sprites/restartButton.png")
 playButtonSprite = pygame.image.load("sprites/playButton.png")
 editorButtonSprite = pygame.image.load("sprites/pencil.png")
 exitButtonSprite = pygame.image.load("sprites/exitButton.png")
+settingsButtonSprite = pygame.image.load("sprites/settingsButton.png")
+plusButtonSprite = pygame.image.load("sprites/plusButton.png")
+settingsDisplay = pygame.image.load("sprites/settingsDisplay1.png")
+settingsDisplayWide = pygame.image.load("sprites/settingsDisplay2.png")
+minusButtonSprite = pygame.image.load("sprites/minusButton.png")
 rightArrowSprite = pygame.image.load("sprites/arrowRight.png")
 leftArrowSprite = pygame.image.load("sprites/arrowLeft.png")
 tilesSprites = pygame.image.load("sprites/tiles.png")
@@ -52,12 +68,16 @@ playerFacing = 0
 backGroundPos = 0
 x = 400 #player x
 y = 300 #player y
+cy = 0 #console y
 upG = False #up go (for player)
 leftG = False #left go (for player)
 downG = False #down go (for player)
 rightG = False #right go (for player)
 mouseKeyPressed = False #do i need to explain this?
 levelsCompleted = [0] # *useful comment*
+fpsLimit = 30
+playerSpeed = 4
+settingSelected = 2 #0 is sounds, 1 is music, 2 is fps
 pbX = [] #pushblocks x
 pbY = [] #pushblocks y
 bX = [] #blocks x
@@ -68,14 +88,17 @@ hrX = [] #horizontal rails x
 hrY = [] #horizontal rails y
 lX = [] #lamps x
 lY = [] #lamps y
-
+fpsLimitSettingRender = consolas.render(str(fpsLimit), False, (70, 185, 35))
 sectorTitle = [232, 128] #menu title coordinates
 restartButton = [736, 0] #restart button coordinates
 playButton = [320, 256] #play button coordinates
-editorButton = [384, 256] #level editor coordinates
+editorButton = [416, 256] #level editor button coordinates
+settingsButton = [352, 256] #settings button coordinates
 exitButton = [448, 256] #exit button coordinates
+plusButton = [448, 256] #plus button coordinates
+minusButton = [320, 256] #minus button coordinates
 rightButton = [768, 256] #right arrow button coordinates
-leftButton = [0, 256] #left arrow button coordinates  
+leftButton = [0, 256] #left arrow button coordinates
 
 levelExit = [0, 0] #exit coordinates
 rightPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #list of pushblocks 1 = pushable to right, 0 = unpushable to right
@@ -417,7 +440,7 @@ def movePushblocks(): #moves pushblocks (how unexpected, huh?)
                         mr = False
                 pm2 = pm2 + 1
             if mr:
-                pbX[pM] = pbX[pM] + 4
+                pbX[pM] = pbX[pM] + playerSpeed
 
         elif pbX[pM] > x - 32 and pbX[pM] < x and pbY[pM] < y + 24 and pbY[pM] > y - 24:
             pm2 = 0
@@ -435,7 +458,7 @@ def movePushblocks(): #moves pushblocks (how unexpected, huh?)
                         ml = False
                 pm2 = pm2 + 1
             if ml:
-                pbX[pM] = pbX[pM] - 4
+                pbX[pM] = pbX[pM] - playerSpeed
 
         elif pbY[pM] > y - 32 and pbY[pM] < y and pbX[pM] < x + 24 and pbX[pM] > x - 24: 
             pm2 = 0
@@ -459,7 +482,7 @@ def movePushblocks(): #moves pushblocks (how unexpected, huh?)
                     upPushable[pM] = 0
                 cipbcm = cipbcm + 1
             if mu:
-                pbY[pM] = pbY[pM] - 4
+                pbY[pM] = pbY[pM] - playerSpeed
 
         elif pbY[pM] < y + 32 and pbY[pM] > y and pbX[pM] < x + 24 and pbX[pM] > x - 24:
             pm2 = 0
@@ -483,7 +506,7 @@ def movePushblocks(): #moves pushblocks (how unexpected, huh?)
                     downPushable[pM] = 0
                 cipbcm = cipbcm + 1
             if md:
-                pbY[pM] = pbY[pM] + 4
+                pbY[pM] = pbY[pM] + playerSpeed
         pM = pM + 1
     #if mu or mr or ml or md:
         #pushblockSound.play()
@@ -619,10 +642,10 @@ def checkPlayerCollisions(): #this checks for blocks collisions with player
                     DupG = False
 
 def checkMouseButtons():
-    global levelsLoaded, gameMode, levelsCompleted, levelsLoaded, mouseKeyPressed, existingLevels, bgx, levelToLoad, wholeLevel
+    global levelsLoaded, gameMode, levelsCompleted, levelsLoaded, mouseKeyPressed, existingLevels, bgx, levelToLoad, wholeLevel, settingsButton, settingSelected, fpsLimit, scaling, sx, sy, width, height
     mousePos = list(pygame.mouse.get_pos())
-    mousePos[0] = math.floor(mousePos[0]/scaling)
-    mousePos[1] = math.floor(mousePos[1]/scaling)
+    mousePos[0] = math.floor(abs(sx-mousePos[0])/scaling)
+    mousePos[1] = math.floor(abs(sy-mousePos[1])/scaling)
     if gameMode == 1:
         if mousePos[0] < restartButton[0] + 32 and mousePos[0] > restartButton[0] and mousePos[1] > restartButton[1] and mousePos[1] < restartButton[1] + 32:
             loadLevel()
@@ -644,6 +667,8 @@ def checkMouseButtons():
         elif mousePos[0] < exitButton[0] + 32 and mousePos[0] > exitButton[0] and mousePos[1] > exitButton[1] and mousePos[1] < exitButton[1] + 32:
             pygame.quit()
             sys.exit()
+        elif mousePos[0] < settingsButton[0] + 32 and mousePos[0] > settingsButton[0] and mousePos[1] > settingsButton[1] and mousePos[1] < settingsButton[1] + 32:
+            gameMode = 4
 
     elif gameMode == 2:
         if mousePos[0] < rightButton[0] + 32 and mousePos[0] > rightButton[0] and mousePos[1] > rightButton[1] and mousePos[1] < rightButton[1] + 32:
@@ -669,9 +694,32 @@ def checkMouseButtons():
             generateBackground()
             gameMode = 0
             bgx = 0
+    elif gameMode == 4:
+        if mousePos[0] < exitButton[0] + 32 and mousePos[0] > exitButton[0] and mousePos[1] > exitButton[1] and mousePos[1] < exitButton[1] + 32:
+            gameMode = 0
+        elif mousePos[0] < plusButton[0] + 32 and mousePos[0] > plusButton[0] and mousePos[1] > plusButton[1] and mousePos[1] < plusButton[1] + 32:
+            if settingSelected == 2:
+                if fpsLimit < 99:
+                    fpsLimit = fpsLimit + 1
+        elif mousePos[0] < minusButton[0] + 32 and mousePos[0] > minusButton[0] and mousePos[1] > minusButton[1] and mousePos[1] < minusButton[1] + 32:
+            if settingSelected == 2:
+                if fpsLimit > 16:
+                    fpsLimit = fpsLimit - 1
+
+def renderConsole():
+    global console
+    consoleWhole = pygame.Surface((width, height), pygame.SRCALPHA)
+    sys.stderr.seek(0)
+    acl = sys.stderr.readlines()
+    console = ""
+    for cr in range(0, len(acl)):
+        console = acl[cr].replace("\n", "")
+        consoleLine = consoleFont.render(str(console), False, (255, 255, 255))
+        consoleWhole.blit(consoleLine, (5, cr*20))
+    return consoleWhole
 
 def drawUi():
-    global gameMode, playButton, exitButton
+    global gameMode, playButton, exitButton, rightButton, leftButton
     if gameMode == 1:
         dis.blit(restartButtonSprite, (restartButton[0], restartButton[1]))
         dis.blit(exitButtonSprite, (exitButton[0], exitButton[1]))
@@ -680,19 +728,42 @@ def drawUi():
         #    for rd in range(0,18):
         #        dis.blit(floorSprite, (cd*32, rd*32))
         dis.blit(menuBackground, (bgx, 0))
-        playButton = [320, 256]
-        exitButton = [448, 256]
+        playButton = [288, 256]
+        exitButton = [480, 256]
         dis.blit(playButtonSprite, (playButton[0], playButton[1]))
         dis.blit(editorButtonSprite, (editorButton[0], editorButton[1]))
         dis.blit(exitButtonSprite, (exitButton[0], exitButton[1]))
         dis.blit(sectorTitleSprite, (sectorTitle[0], sectorTitle[1]))
+        dis.blit(settingsButtonSprite, (settingsButton[0], settingsButton[1]))
     if gameMode == 2:
+        rightButton = [768, 256]
+        leftButton = [0, 256]
         playButton = [704, 0]
         exitButton = [768, 0]
         dis.blit(playButtonSprite, (playButton[0], playButton[1]))
         dis.blit(exitButtonSprite, (exitButton[0], exitButton[1]))
         dis.blit(rightArrowSprite, (rightButton[0], rightButton[1]))
         dis.blit(leftArrowSprite, (leftButton[0], leftButton[1]))
+
+    if gameMode == 4:
+        dis.blit(menuBackground, (bgx, 0))
+        exitButton = [768, 0]
+        plusButton = [448, 256]
+        minusButton = [320, 256]
+        rightButton = [448, 192]
+        leftButton = [320, 192]
+        dis.blit(exitButtonSprite, (exitButton[0], exitButton[1]))
+        dis.blit(plusButtonSprite, (plusButton[0], plusButton[1]))
+        dis.blit(minusButtonSprite, (minusButton[0], minusButton[1]))
+        dis.blit(rightArrowSprite, (rightButton[0], rightButton[1]))
+        dis.blit(leftArrowSprite, (leftButton[0], leftButton[1]))
+        dis.blit(settingsDisplayWide, (368, 192))
+        dis.blit(settingsDisplay, (384, 256))
+        if settingSelected == 2:
+            dis.blit(fpsLimitSettingRender, (387, 261))
+            dis.blit(fpsSettingTitle, (381, 197))
+
+
 pygame.init()
 display = pygame.display.set_mode((width, height), pygame.RESIZABLE)
 pygame.display.set_caption("Sector")
@@ -704,26 +775,47 @@ drawAllBlocks()
 generateLightMap(lightSprite, wholeLevel)
 drawLight()
 generateBackground()
+
+
+
 while not gameOver:
     summonBox, summonWall, destroyWall = False, False, False
     mouseKeyPressed = False
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_w:
-                upG = True
-            if event.key == pygame.K_a:
-                leftG = True
-            if event.key == pygame.K_s:
-                downG = True
-            if event.key == pygame.K_d:
-                rightG = True
-            if event.key == pygame.K_r:
-                loadLevel()
-                generateWalls()
-            if event.key == pygame.K_p:
-                summonBox = True
-            if event.key == pygame.K_i:
-                summonWall = True
+            if not consoleOn:
+                if event.key == pygame.K_w:
+                    upG = True
+                if event.key == pygame.K_a:
+                    leftG = True
+                if event.key == pygame.K_s:
+                    downG = True
+                if event.key == pygame.K_d:
+                    rightG = True
+                if event.key == pygame.K_r:
+                    loadLevel()
+                    generateWalls()
+                if event.key == pygame.K_p:
+                    summonBox = True
+                if event.key == pygame.K_i:
+                    summonWall = True
+            if event.key == pygame.K_DOWN:
+                cy = cy + 20
+            if event.key == pygame.K_UP:
+                cy = cy - 20
+            if not consoleOn:
+                continue
+            command = command + event.unicode
+            if event.key == pygame.K_RETURN:
+                print("> " + str(command))
+                try:
+                    exec(str(command))
+                except:
+                    print("An error occured.")
+                command = ""
+            if event.key == pygame.K_BACKSPACE:
+                command = command[:-1]
+            commandRender = consoleFont.render("> " + command, False, (255, 255, 255))
         if gameMode == 0:
             x = 0
             y = 0
@@ -740,6 +832,11 @@ while not gameOver:
                 rightG = False
             if event.key == pygame.K_h:
                 pygame.image.save(dis, "screenshot.png")
+            if event.key == pygame.K_F1:
+                if consoleOn:
+                    consoleOn = False
+                else:
+                    consoleOn = True
         if event.type == pygame.QUIT:
             gameOver = True
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -750,16 +847,18 @@ while not gameOver:
         DupG, DleftG, DdownG, DrightG = True, True, True, True
     if upG and not DupG:
         playerFacing = 2
-        y = y - 4
+        y = y - playerSpeed
     if leftG and not DleftG:
         playerFacing = 1
-        x = x - 4
+        x = x - playerSpeed
     if downG and not DdownG:
         playerFacing = 0
-        y = y + 4
+        y = y + playerSpeed
     if rightG and not DrightG:
         playerFacing = 3
-        x = x + 4
+        x = x + playerSpeed
+    if gameMode == 4:
+        fpsLimitSettingRender = consolas.render(str(fpsLimit), False, (70, 185, 35))
     checkInteractiveBlocks()
     movePushblocks()
     drawAllBlocks()
@@ -775,11 +874,17 @@ while not gameOver:
         cheat()
     if gameMode == 3:
         gameMode = 0
+    playerSpeed = 30/fpsLimit*4
     dis.blit(lightSprite, (0, 0))
     drawUi()
-    display.blit(pygame.transform.scale(dis, (math.floor(width*scaling), math.floor(height*scaling))), (0, 0))
+    if consoleOn:
+        dis.blit(commandRender, (5, 548))
+        dis.blit(renderConsole(), (0, cy))
+    sx = abs(w-width*scaling)/2
+    sy = abs(h-height*scaling)/2
+    display.blit(pygame.transform.scale(dis, (math.floor(width*scaling), math.floor(height*scaling))), (sx, sy))
     pygame.display.update()
-    clock.tick(30)
+    clock.tick(fpsLimit)
 
 pygame.quit()
 sys.exit()
