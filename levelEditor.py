@@ -16,7 +16,10 @@ save = False
 selectedTool = 0 #0 is pencil, 1 is pipette
 
 lastUsedLevelFile = open("data/lastUsedLevel.srgd", "r")
+lastUsedLevel = ""
 lastUsedLevel = str(lastUsedLevelFile.readlines(1))
+lastUsedLevel = lastUsedLevel.replace("['", "")
+lastUsedLevel = lastUsedLevel.replace("']", "")
 lastUsedLevelFile.close()
 loadLastUsedFile = os.path.exists("levels/" + str(lastUsedLevelFile))
 wholeLevel = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
@@ -34,11 +37,11 @@ horizontalRailsSprite = pygame.image.load("sprites/horizontalRails.png")
 exitSprite = pygame.image.load("sprites/exit.png")
 lampSprite = pygame.image.load("sprites/lamp.png")
 
-def loadLevelFile(levelName):
+def loadLevelFile(levelName = lastUsedLevel):
 	global lastUsedLevel, wholeLevel
 	if loadLastUsedFile:
 		levelName = lastUsedLevel
-	loadedLevel = open("levels/" + levelName)
+	loadedLevel = open("levels/" + str(levelName))
 	for rowsLoaded in range(0, 18):
 		wholeLevel[rowsLoaded].append(loadedLevel.readlines(rowsLoaded + 1))
 		wholeLevel[rowsLoaded] = str(wholeLevel[rowsLoaded]).replace("\\n", "")
@@ -133,7 +136,7 @@ def drawUi():
 	if useBlock == "08":
 		dis.blit(lampSprite, (32, 592))
 
-def saveLevel():
+def saveLevel(levelSaveName = lastUsedLevel):
 	global lastUsedLevel, wholeLevel, saveLevelName, save
 	customLevelsDone = 0
 	while True:
@@ -157,7 +160,7 @@ def saveLevel():
 	newLevelFile.writelines(wholeLevel)
 	newLevelFile.close()"""
 
-loadLevelFile("level7.srlv")
+loadLevelFile()
 
 pygame.init()
 dis = pygame.display.set_mode((width, height))

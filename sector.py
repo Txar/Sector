@@ -4,7 +4,7 @@ from collections import namedtuple
 #Sector by Txar
 #big thanks to Xeloboyo and ThePythonGuy3 as they helped me with some of the code <3
 
-
+version = "pre-alpha 0.1"
 sys.stderr = open("log.txt", "r+")
 sys.stdout = sys.stderr
 command = ""
@@ -21,6 +21,7 @@ consolas = pygame.font.SysFont("consolas", 23)
 consoleFont = pygame.font.SysFont("consolas", 16)
 fpsSettingTitle = consolas.render("FPS", False, (70, 185, 35))
 commandRender = consoleFont.render("> ", False, (255, 255, 255))
+versionRender = consoleFont.render(version, False, (255, 255, 255))
 levelToLoad = "backgroundLevel"
 bgx = 0 #background x
 Vec2 = namedtuple('Vec2', 'x y')
@@ -101,10 +102,16 @@ rightButton = [768, 256] #right arrow button coordinates
 leftButton = [0, 256] #left arrow button coordinates
 
 levelExit = [0, 0] #exit coordinates
-rightPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #list of pushblocks 1 = pushable to right, 0 = unpushable to right
-leftPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #same goes for those 3
-upPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2] #btw, pushblocks limit is 15 for a level because im stupid
-downPushable = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+rightPushable = [] #list of pushblocks 1 = pushable to right, 0 = unpushable to right
+leftPushable = [] #same goes for those 3
+upPushable = [] #btw, pushblocks limit is 15 for a level because im stupid
+downPushable = []
+for i in range(0, 30):
+    rightPushable.append("2")
+    leftPushable.append("2")
+    upPushable.append("2")
+    downPushable.append("2")
+
 lightMap = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]
 DrightG, DleftG, DupG, DdownG = False, False, False, False #dont go right/left/up/down
 levelsLoaded = 1
@@ -329,9 +336,17 @@ def loadLevel():
 
                 blocksPlaced = blocksPlaced + 1
             linesPlaced = linesPlaced + 1
-    levelFile.close()
     generateLightMap(lightSprite, wholeLevel)
     generateBackground()
+    if levelFile.readline(19).replace("\n", "") == "1":
+        levelScript = levelFile.readlines()
+        print(levelScript)
+        for i in range(0, len(levelScript)):
+            levelScript[i] = levelScript[i].replace("\n", "")
+            levelScript[i] = levelScript[i].replace("['", "")
+            levelScript[i] = levelScript[i].replace("']", "")
+            exec(levelScript[i])
+    levelFile.close()
 
 def generateBackground():
     global gbg #generating background
@@ -734,6 +749,7 @@ def drawUi():
         dis.blit(editorButtonSprite, (editorButton[0], editorButton[1]))
         dis.blit(exitButtonSprite, (exitButton[0], exitButton[1]))
         dis.blit(sectorTitleSprite, (sectorTitle[0], sectorTitle[1]))
+        dis.blit(versionRender, (sectorTitle[0] + 108, sectorTitle[1] + 100))
         dis.blit(settingsButtonSprite, (settingsButton[0], settingsButton[1]))
     if gameMode == 2:
         rightButton = [768, 256]
@@ -811,7 +827,7 @@ while not gameOver:
                 try:
                     exec(str(command))
                 except:
-                    print("An error occured.")
+                    print("An error has occured.")
                 command = ""
             if event.key == pygame.K_BACKSPACE:
                 command = command[:-1]
