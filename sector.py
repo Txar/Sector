@@ -22,11 +22,12 @@ consoleFont = pygame.font.SysFont("consolas", 16)
 fpsSettingTitle = consolas.render("FPS", False, (70, 185, 35))
 commandRender = consoleFont.render("> ", False, (255, 255, 255))
 versionRender = consoleFont.render(version, False, (255, 255, 255))
+brightnessSettingTitle = consolas.render("brightness", False, (70, 185, 35))
 levelToLoad = "backgroundLevel"
 bgx = 0 #background x
 Vec2 = namedtuple('Vec2', 'x y')
 radDeg = 180 / math.pi
-devMode = False
+devMode = True #allows to place walls and pushblocks (by pressing i and p) when True, you can change it in console (which is accesed by pressing F1)
 width = 800
 height = 576
 gameOver = False
@@ -63,8 +64,7 @@ wallsSprite = pygame.Surface((width, height), pygame.SRCALPHA)
 floorSprite = pygame.Surface((width, height))
 dis = pygame.Surface((width, height))
 lightSprite = pygame.Surface((width, height), pygame.SRCALPHA)
-menuBackground = pygame.Surface((width*5, height))
-true = True #this made me laugh so hard that i will just leave it here
+menuBackground = pygame.Surface((width, height))
 playerFacing = 0
 backGroundPos = 0
 x = 400 #player x
@@ -77,8 +77,9 @@ rightG = False #right go (for player)
 mouseKeyPressed = False #do i need to explain this?
 levelsCompleted = [0] # *useful comment*
 fpsLimit = 30
+brightness = 0
 playerSpeed = 4
-settingSelected = 2 #0 is sounds, 1 is music, 2 is fps
+settingSelected = 2 #0 is brightness, 2 is fps
 pbX = [] #pushblocks x
 pbY = [] #pushblocks y
 bX = [] #blocks x
@@ -90,6 +91,7 @@ hrY = [] #horizontal rails y
 lX = [] #lamps x
 lY = [] #lamps y
 fpsLimitSettingRender = consolas.render(str(fpsLimit), False, (70, 185, 35))
+brightnessSettingRender = consolas.render(str(brightness), False, (70, 185, 35))
 sectorTitle = [232, 128] #menu title coordinates
 restartButton = [736, 0] #restart button coordinates
 playButton = [320, 256] #play button coordinates
@@ -104,7 +106,7 @@ leftButton = [0, 256] #left arrow button coordinates
 levelExit = [0, 0] #exit coordinates
 rightPushable = [] #list of pushblocks 1 = pushable to right, 0 = unpushable to right
 leftPushable = [] #same goes for those 3
-upPushable = [] #btw, pushblocks limit is 15 for a level because im stupid
+upPushable = []
 downPushable = []
 for i in range(0, 30):
     rightPushable.append("2")
@@ -337,7 +339,6 @@ def loadLevel():
                 blocksPlaced = blocksPlaced + 1
             linesPlaced = linesPlaced + 1
     generateLightMap(lightSprite, wholeLevel)
-    generateBackground()
     if levelFile.readline(19).replace("\n", "") == "1":
         levelScript = levelFile.readlines()
         print(levelScript)
@@ -546,30 +547,43 @@ def blurSurf(surface, amt):
 def cheat():
     if summonBox:
         if playerFacing == 0:
-            pbX.append(x)
-            pbY.append(y + 32)
+            pbX.append(roundTo32(x + 16))
+            pbY.append(roundTo32(y + 48))
         if playerFacing == 1:
-            pbX.append(x - 32)
-            pbY.append(y)
+            pbX.append(roundTo32(x - 16))
+            pbY.append(roundTo32(y + 16))
         if playerFacing == 2:
-            pbX.append(x)
-            pbY.append(y - 32)
+            pbX.append(roundTo32(x + 16))
+            pbY.append(roundTo32(y - 16))
         if playerFacing == 3:
-            pbX.append(x + 32)
-            pbY.append(y)
+            pbX.append(roundTo32(x + 48))
+            pbY.append(roundTo32(y + 16))
     if summonWall:
         if playerFacing == 0:
-            bX.append(x)
-            bY.append(y + 32)
+            bX.append(roundTo32(x + 16))
+            bY.append(roundTo32(y + 48))
+            lx = roundTo32(x + 16)
+            ly = roundTo32(y + 48)
+            wholeLevel[int(ly/32)][int(lx/32)] = "01"
         if playerFacing == 1:
-            bX.append(x - 32)
-            bY.append(y)
+            bX.append(roundTo32(x - 16))
+            bY.append(roundTo32(y + 16))
+            lx = roundTo32(x - 16)
+            ly = roundTo32(y + 16)
+            wholeLevel[int(ly/32)][int(lx/32)] = "01"
         if playerFacing == 2:
-            bX.append(x)
-            bY.append(y - 32)
+            bX.append(roundTo32(x + 16))
+            bY.append(roundTo32(y - 16))
+            ly = roundTo32(y - 16)
+            lx = roundTo32(x + 16)
+            wholeLevel[int(ly/32)][int(lx/32)] = "01"
         if playerFacing == 3:
-            bX.append(x + 32)
-            bY.append(y)
+            bX.append(roundTo32(x + 48))
+            bY.append(roundTo32(y + 16))
+            ly = roundTo32(y + 16)
+            lx = roundTo32(x + 48)
+            wholeLevel[int(ly/32)][int(lx/32)] = "01"
+        generateWalls()
 
 def checkInteractiveBlocks():
     hC = 0 #holess checked
@@ -700,15 +714,7 @@ def checkMouseButtons():
             generateWalls()
             gameMode = 1
         if mousePos[0] < exitButton[0] + 32 and mousePos[0] > exitButton[0] and mousePos[1] > exitButton[1] and mousePos[1] < exitButton[1] + 32:
-            levelToLoad = "backgroundLevel"
-            loadLevel()
-            generateWalls()
-            drawAllBlocks()
-            generateLightMap(lightSprite, wholeLevel)
-            drawLight()
-            generateBackground()
             gameMode = 0
-            bgx = 0
     elif gameMode == 4:
         if mousePos[0] < exitButton[0] + 32 and mousePos[0] > exitButton[0] and mousePos[1] > exitButton[1] and mousePos[1] < exitButton[1] + 32:
             gameMode = 0
@@ -778,6 +784,9 @@ def drawUi():
         if settingSelected == 2:
             dis.blit(fpsLimitSettingRender, (387, 261))
             dis.blit(fpsSettingTitle, (381, 197))
+        if settingSelected == 1:
+            dis.blit(brightnessSettingRender)
+            dis.blit(brightnessSettingTitle)
 
 
 pygame.init()
@@ -826,8 +835,8 @@ while not gameOver:
                 print("> " + str(command))
                 try:
                     exec(str(command))
-                except:
-                    print("An error has occured.")
+                except Exception as err:
+                    print("An error has occured: " + str(err))
                 command = ""
             if event.key == pygame.K_BACKSPACE:
                 command = command[:-1]
@@ -886,7 +895,7 @@ while not gameOver:
         glowPlayer()
     if mouseKeyPressed:
         checkMouseButtons()
-    if devMode: #i find these 2 lines so funny
+    if devMode:
         cheat()
     if gameMode == 3:
         gameMode = 0
@@ -898,6 +907,7 @@ while not gameOver:
         dis.blit(renderConsole(), (0, cy))
     sx = abs(w-width*scaling)/2
     sy = abs(h-height*scaling)/2
+    dis.fill((10*brightness, 10*brightness, 10*brightness), special_flags=pygame.BLEND_RGB_ADD)
     display.blit(pygame.transform.scale(dis, (math.floor(width*scaling), math.floor(height*scaling))), (sx, sy))
     pygame.display.update()
     clock.tick(fpsLimit)
