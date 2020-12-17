@@ -1,5 +1,5 @@
 # Sector
-A simple puzzle game made in pygame. Don't roast me for terrible code, this is my first time making a thing like this.
+A simple puzzle game made in pygame.
 
 It is highly recommended to install python 3 and pygame for best experience. Current releases do contain and .exe file but it is not 100% sure it will work even if you have windows. And you have the latest version if you just download the zipped master branch. No need to follow the installation guide if you already have pygame and python installed, you can just run it.
 
