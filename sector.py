@@ -4,7 +4,7 @@ from collections import namedtuple
 #Sector by Txar
 #big thanks to Xeloboyo and ThePythonGuy3 as they helped me with some of the code <3
 
-version = "pre-alpha 0.1"
+version = "version 0.1"
 sys.stderr = open("log.txt", "r+")
 sys.stdout = sys.stderr
 command = ""
@@ -18,11 +18,13 @@ if not os.path.exists("data/progress.srgd"):
 consoleOn = False
 pygame.font.init()
 consolas = pygame.font.SysFont("consolas", 23)
+consolasMini = pygame.font.SysFont("consolas", 22)
 consoleFont = pygame.font.SysFont("consolas", 16)
 fpsSettingTitle = consolas.render("FPS", False, (70, 185, 35))
 commandRender = consoleFont.render("> ", False, (255, 255, 255))
 versionRender = consoleFont.render(version, False, (255, 255, 255))
-brightnessSettingTitle = consolas.render("brightness", False, (70, 185, 35))
+brightnessSettingTitle = consolasMini.render("brightness", False, (70, 185, 35))
+fullscreenSettingTitle = consolasMini.render("fulscreen", False, (70, 185, 35))
 levelToLoad = "backgroundLevel"
 bgx = 0 #background x
 Vec2 = namedtuple('Vec2', 'x y')
@@ -53,6 +55,7 @@ settingsButtonSprite = pygame.image.load("sprites/settingsButton.png")
 plusButtonSprite = pygame.image.load("sprites/plusButton.png")
 settingsDisplay = pygame.image.load("sprites/settingsDisplay1.png")
 settingsDisplayWide = pygame.image.load("sprites/settingsDisplay2.png")
+settingsDisplayWide2 = pygame.image.load("sprites/settingsDisplay3.png")
 minusButtonSprite = pygame.image.load("sprites/minusButton.png")
 rightArrowSprite = pygame.image.load("sprites/arrowRight.png")
 leftArrowSprite = pygame.image.load("sprites/arrowLeft.png")
@@ -78,8 +81,9 @@ mouseKeyPressed = False #do i need to explain this?
 levelsCompleted = [0] # *useful comment*
 fpsLimit = 30
 brightness = 0
+fullscreen = 0
 playerSpeed = 4
-settingSelected = 2 #0 is brightness, 2 is fps
+settingSelected = 2 #1 is brightness, 2 is fps, 3 is fullscreen
 pbX = [] #pushblocks x
 pbY = [] #pushblocks y
 bX = [] #blocks x
@@ -92,6 +96,7 @@ lX = [] #lamps x
 lY = [] #lamps y
 fpsLimitSettingRender = consolas.render(str(fpsLimit), False, (70, 185, 35))
 brightnessSettingRender = consolas.render(str(brightness), False, (70, 185, 35))
+fullscreenSettingRender = consolas.render(str(fullscreen), False, (70, 185, 35))
 sectorTitle = [232, 128] #menu title coordinates
 restartButton = [736, 0] #restart button coordinates
 playButton = [320, 256] #play button coordinates
@@ -128,6 +133,17 @@ while True:
         existingLevels = lC
         break
     lC = lC + 1
+if os.path.exists("data/settings.srgd"):
+    settingsLoad = open("data/settings.srgd", "r")
+    allSettings = settingsLoad.read().split("\n")
+    brightness = int(allSettings[0])
+    fpsLimit = int(allSettings[1])
+
+def saveSettings():
+    global brightness, fpsLimit
+    saveFile = open("data/settings.srgd", "w")
+    saveFile.write(str(brightness) + "\n" + str(fpsLimit))
+    saveFile.close()
 
 def generateLightMap(lightSprite, wholeLevel): #this is mostly made by Xelo
     global lightMap
@@ -671,7 +687,7 @@ def checkPlayerCollisions(): #this checks for blocks collisions with player
                     DupG = False
 
 def checkMouseButtons():
-    global levelsLoaded, gameMode, levelsCompleted, levelsLoaded, mouseKeyPressed, existingLevels, bgx, levelToLoad, wholeLevel, settingsButton, settingSelected, fpsLimit, scaling, sx, sy, width, height
+    global levelsLoaded, gameMode, levelsCompleted, levelsLoaded, mouseKeyPressed, existingLevels, bgx, levelToLoad, wholeLevel, settingsButton, settingSelected, fpsLimit, scaling, sx, sy, width, height, brightness, fullscreen, display
     mousePos = list(pygame.mouse.get_pos())
     mousePos[0] = math.floor(abs(sx-mousePos[0])/scaling)
     mousePos[1] = math.floor(abs(sy-mousePos[1])/scaling)
@@ -717,16 +733,42 @@ def checkMouseButtons():
             gameMode = 0
     elif gameMode == 4:
         if mousePos[0] < exitButton[0] + 32 and mousePos[0] > exitButton[0] and mousePos[1] > exitButton[1] and mousePos[1] < exitButton[1] + 32:
+            saveSettings()
             gameMode = 0
         elif mousePos[0] < plusButton[0] + 32 and mousePos[0] > plusButton[0] and mousePos[1] > plusButton[1] and mousePos[1] < plusButton[1] + 32:
             if settingSelected == 2:
                 if fpsLimit < 99:
                     fpsLimit = fpsLimit + 1
+            if settingSelected == 1:
+                if brightness < 9:
+                    brightness = brightness + 1
+            if settingSelected == 3:
+                if fullscreen == 0:
+                    fullscreen = 1
+                    pygame.display.quit()
+                    display = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+                    pygame.display.init()
+                    display.fill((0, 0, 0))
         elif mousePos[0] < minusButton[0] + 32 and mousePos[0] > minusButton[0] and mousePos[1] > minusButton[1] and mousePos[1] < minusButton[1] + 32:
             if settingSelected == 2:
                 if fpsLimit > 16:
                     fpsLimit = fpsLimit - 1
-
+            if settingSelected == 1:
+                if brightness > 0:
+                    brightness = brightness - 1
+            if settingSelected == 3:
+                if fullscreen == 1:
+                    fullscreen = 0
+                    pygame.display.quit()
+                    display = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+                    pygame.display.init()
+                    display.fill((0, 0, 0))
+        elif mousePos[0] < leftButton[0] + 32 and mousePos[0] > leftButton[0] and mousePos[1] > leftButton[1] and mousePos[1] < leftButton[1] + 32:
+            if settingSelected > 1:
+                settingSelected = settingSelected - 1
+        elif mousePos[0] < rightButton[0] + 32 and mousePos[0] > rightButton[0] and mousePos[1] > rightButton[1] and mousePos[1] < rightButton[1] + 32:
+            if settingSelected < 3:
+                settingSelected = settingSelected + 1
 def renderConsole():
     global console
     consoleWhole = pygame.Surface((width, height), pygame.SRCALPHA)
@@ -740,7 +782,7 @@ def renderConsole():
     return consoleWhole
 
 def drawUi():
-    global gameMode, playButton, exitButton, rightButton, leftButton
+    global gameMode, playButton, exitButton, rightButton, leftButton, settingSelected
     if gameMode == 1:
         dis.blit(restartButtonSprite, (restartButton[0], restartButton[1]))
         dis.blit(exitButtonSprite, (exitButton[0], exitButton[1]))
@@ -772,22 +814,26 @@ def drawUi():
         exitButton = [768, 0]
         plusButton = [448, 256]
         minusButton = [320, 256]
-        rightButton = [448, 192]
-        leftButton = [320, 192]
+        rightButton = [480, 192]
+        leftButton = [288, 192]
         dis.blit(exitButtonSprite, (exitButton[0], exitButton[1]))
         dis.blit(plusButtonSprite, (plusButton[0], plusButton[1]))
         dis.blit(minusButtonSprite, (minusButton[0], minusButton[1]))
         dis.blit(rightArrowSprite, (rightButton[0], rightButton[1]))
         dis.blit(leftArrowSprite, (leftButton[0], leftButton[1]))
-        dis.blit(settingsDisplayWide, (368, 192))
         dis.blit(settingsDisplay, (384, 256))
         if settingSelected == 2:
+            dis.blit(settingsDisplayWide, (368, 192))
             dis.blit(fpsLimitSettingRender, (387, 261))
             dis.blit(fpsSettingTitle, (381, 197))
         if settingSelected == 1:
-            dis.blit(brightnessSettingRender)
-            dis.blit(brightnessSettingTitle)
-
+            dis.blit(settingsDisplayWide2, (336, 192))
+            dis.blit(brightnessSettingRender, (394, 261))
+            dis.blit(brightnessSettingTitle, (340, 197))
+        if settingSelected == 3:
+            dis.blit(settingsDisplayWide2, (336, 192))
+            dis.blit(fullscreenSettingTitle, (346, 197))
+            dis.blit(brightnessSettingRender, (394, 261))
 
 pygame.init()
 display = pygame.display.set_mode((width, height), pygame.RESIZABLE)
@@ -801,7 +847,7 @@ generateLightMap(lightSprite, wholeLevel)
 drawLight()
 generateBackground()
 
-
+#DISPLAYSURF = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
 while not gameOver:
     summonBox, summonWall, destroyWall = False, False, False
@@ -884,6 +930,7 @@ while not gameOver:
         x = x + playerSpeed
     if gameMode == 4:
         fpsLimitSettingRender = consolas.render(str(fpsLimit), False, (70, 185, 35))
+        brightnessSettingRender = consolasMini.render(str(brightness), False, (70, 185, 35))
     checkInteractiveBlocks()
     movePushblocks()
     drawAllBlocks()
@@ -908,6 +955,7 @@ while not gameOver:
     sx = abs(w-width*scaling)/2
     sy = abs(h-height*scaling)/2
     dis.fill((10*brightness, 10*brightness, 10*brightness), special_flags=pygame.BLEND_RGB_ADD)
+    display.fill((0, 0, 0))
     display.blit(pygame.transform.scale(dis, (math.floor(width*scaling), math.floor(height*scaling))), (sx, sy))
     pygame.display.update()
     clock.tick(fpsLimit)

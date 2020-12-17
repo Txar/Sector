@@ -1,6 +1,10 @@
 # Game data
 screenshot.png
 data/progress.srgd
+settings.srgd
+
+# Game versions
+*.zip
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
